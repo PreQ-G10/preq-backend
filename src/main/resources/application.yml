@@ -11,3 +11,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+u2net:
+  model:
+    path: ${U2NET_MODEL_PATH:${user.home}/.cache/u2net.onnx}
+
+cloudinary:
+  url: ${CLOUDINARY_URL}

@@ -1,13 +1,16 @@
 package preq.model
 
-import com.pgvector.PGvector
+import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
 import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
+import preq.enum.ProductImageStatus
 
 @Entity
 @Table(name = "products")
@@ -25,18 +28,16 @@ class Product : BaseEntity() {
     @Column(unique = true)
     var barcode: String? = null
 
-    @NotBlank
     @Column
-    var description: String? = null
+    var quantity: Int = 0
 
     @Column
-    var quantity: Int? = null
+    var quantityType: String = ""
 
-    @Column(columnDefinition = "vector(512)")
-    var embedding: PGvector? = null
+    @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val images: MutableList<ProductImage> = mutableListOf()
 
-    @ElementCollection
-    @CollectionTable(name = "product_tags", joinColumns = [JoinColumn(name = "product_id")])
-    @Column(name = "tag")
-    var tags: MutableList<String> = mutableListOf()
+    fun approvedImages() = images.filter { it.status == ProductImageStatus.APPROVED }
+    fun hasBarcode() = barcode != null
+
 }
