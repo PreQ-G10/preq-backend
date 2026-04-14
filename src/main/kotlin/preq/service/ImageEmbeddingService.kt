@@ -78,9 +78,11 @@ class ImageEmbeddingService {
         val resnetFile = java.io.File(resnetModelPath)
         if (!resnetFile.exists()) {
             resnetFile.parentFile.mkdirs()
-            val gzUrl = java.net.URI(
-                "https://djl-ai.s3.amazonaws.com/mlrepo/model/cv/image_classification/ai/djl/pytorch/resnet/0.0.1/traced_resnet50.pt.gz"
-            ).toURL()
+            val gzUrl =
+                java.net
+                    .URI(
+                        "https://djl-ai.s3.amazonaws.com/mlrepo/model/cv/image_classification/ai/djl/pytorch/resnet/0.0.1/traced_resnet50.pt.gz",
+                    ).toURL()
             gzUrl.openStream().use { gzInput ->
                 java.util.zip.GZIPInputStream(gzInput).use { input ->
                     resnetFile.outputStream().use { output ->
@@ -92,15 +94,17 @@ class ImageEmbeddingService {
 
         ortSession = ortEnv.createSession(modelPath, OrtSession.SessionOptions())
 
-        val embeddingCriteria = Criteria.builder()
-            .optApplication(Application.CV.IMAGE_CLASSIFICATION)
-            .setTypes(Image::class.java, FloatArray::class.java)
-            .optEngine("PyTorch")
-            .optModelPath(Paths.get(resnetModelPath).parent)
-            .optModelName("traced_resnet50")
-            .optTranslator(EmbeddingTranslator())
-            .optProgress(ProgressBar())
-            .build()
+        val embeddingCriteria =
+            Criteria
+                .builder()
+                .optApplication(Application.CV.IMAGE_CLASSIFICATION)
+                .setTypes(Image::class.java, FloatArray::class.java)
+                .optEngine("PyTorch")
+                .optModelPath(Paths.get(resnetModelPath).parent)
+                .optModelName("traced_resnet50")
+                .optTranslator(EmbeddingTranslator())
+                .optProgress(ProgressBar())
+                .build()
 
         embeddingModel = embeddingCriteria.loadModel()
         embeddingPredictor = embeddingModel.newPredictor()
