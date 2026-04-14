@@ -9,14 +9,14 @@ import preq.model.Product
 import preq.model.ProductImage
 
 class ProductTest {
-
     @Test
     fun `approvedImages returns only approved images`() {
-        val product = Product().apply {
-            images.add(ProductImage().apply { status = ProductImageStatus.APPROVED })
-            images.add(ProductImage().apply { status = ProductImageStatus.PENDING_REVIEW })
-            images.add(ProductImage().apply { status = ProductImageStatus.REJECTED })
-        }
+        val product =
+            Product().apply {
+                images.add(ProductImage().apply { status = ProductImageStatus.APPROVED })
+                images.add(ProductImage().apply { status = ProductImageStatus.PENDING_REVIEW })
+                images.add(ProductImage().apply { status = ProductImageStatus.REJECTED })
+            }
 
         val approved = product.approvedImages()
 

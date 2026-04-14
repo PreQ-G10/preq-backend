@@ -16,17 +16,16 @@ import preq.web.dto.ProductResponse
 class ProductController(
     private val productService: ProductService,
 ) {
-
     @GetMapping("/search")
-    fun searchByName(@RequestParam name: String): List<ProductResponse> {
-        return productService.searchByName(name).map { ProductResponse.from(it) }
-    }
+    fun searchByName(
+        @RequestParam name: String,
+    ): List<ProductResponse> = productService.searchByName(name).map { ProductResponse.from(it) }
 
     @PostMapping("/{productId}/confirm-image", consumes = ["multipart/form-data"])
     fun confirmImage(
         @PathVariable productId: Long,
         @RequestPart("file") file: MultipartFile,
-        @RequestParam similarity: Double
+        @RequestParam similarity: Double,
     ): ProductResponse {
         val product = productService.confirmMatch(productId, file, similarity)
         return ProductResponse.from(product)

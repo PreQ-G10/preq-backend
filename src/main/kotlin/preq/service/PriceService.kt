@@ -13,18 +13,23 @@ import java.time.LocalDateTime
 class PriceService(
     private val locationProductPriceRepository: LocationProductPriceRepository,
     private val productRepository: ProductRepository,
-    private val locationRepository: LocationRepository
+    private val locationRepository: LocationRepository,
 ) {
-
-    fun reportPrice(productId: Long, locationId: Long, price: BigDecimal): LocationProductPrice {
+    fun reportPrice(
+        productId: Long,
+        locationId: Long,
+        price: BigDecimal,
+    ): LocationProductPrice {
         val product = productRepository.findById(productId).orElseThrow()
         val location = locationRepository.findById(locationId).orElseThrow()
-        return locationProductPriceRepository.save(LocationProductPrice().apply {
-            this.product = product
-            this.location = location
-            this.price = price
-            this.reportedAt = LocalDateTime.now()
-        })
+        return locationProductPriceRepository.save(
+            LocationProductPrice().apply {
+                this.product = product
+                this.location = location
+                this.price = price
+                this.reportedAt = LocalDateTime.now()
+            },
+        )
     }
 
     fun getPriceSummary(productId: Long): PriceSummaryResponse {

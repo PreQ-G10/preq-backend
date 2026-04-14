@@ -7,17 +7,21 @@ import preq.repository.LocationRepository
 import preq.web.dto.LocationResponse
 
 @Service
-class LocationService(private val locationRepository: LocationRepository) {
+class LocationService(
+    private val locationRepository: LocationRepository,
+) {
+    fun search(name: String): List<LocationResponse> = locationRepository.searchByName(name).map { LocationResponse.from(it) }
 
-    fun search(name: String): List<LocationResponse> {
-        return locationRepository.searchByName(name).map { LocationResponse.from(it) }
-    }
-
-    fun create(name: String, address: String, type: LocationType): Location {
-        return locationRepository.save(Location().apply {
-            this.name = name
-            this.address = address
-            this.type = type
-        })
-    }
+    fun create(
+        name: String,
+        address: String,
+        type: LocationType,
+    ): Location =
+        locationRepository.save(
+            Location().apply {
+                this.name = name
+                this.address = address
+                this.type = type
+            },
+        )
 }

@@ -12,7 +12,6 @@ import preq.enum.LocationType
 @Entity
 @Table(name = "location")
 class Location : BaseEntity() {
-
     var name: String = ""
     var address: String = ""
 

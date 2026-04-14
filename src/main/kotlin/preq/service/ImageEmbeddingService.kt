@@ -31,24 +31,30 @@ class ImageEmbeddingService {
     private lateinit var ortSession: OrtSession
     private lateinit var embeddingModel: ZooModel<Image, FloatArray>
     private lateinit var embeddingPredictor: Predictor<Image, FloatArray>
+
     @Value("\${u2net.model.path}")
     private lateinit var modelPath: String
 
     private class EmbeddingTranslator : Translator<Image, FloatArray> {
-        override fun processInput(ctx: TranslatorContext, input: Image): NDList {
+        override fun processInput(
+            ctx: TranslatorContext,
+            input: Image,
+        ): NDList {
             var array = input.toNDArray(ctx.ndManager, Image.Flag.COLOR)
             array = Resize(224, 224).transform(array)
             array = ToTensor().transform(array)
-            array = Normalize(
-                floatArrayOf(0.485f, 0.456f, 0.406f),
-                floatArrayOf(0.229f, 0.224f, 0.225f)
-            ).transform(array)
+            array =
+                Normalize(
+                    floatArrayOf(0.485f, 0.456f, 0.406f),
+                    floatArrayOf(0.229f, 0.224f, 0.225f),
+                ).transform(array)
             return NDList(array)
         }
 
-        override fun processOutput(ctx: TranslatorContext, list: NDList): FloatArray {
-            return list.singletonOrThrow().toFloatArray()
-        }
+        override fun processOutput(
+            ctx: TranslatorContext,
+            list: NDList,
+        ): FloatArray = list.singletonOrThrow().toFloatArray()
     }
 
     @PostConstruct
@@ -58,7 +64,8 @@ class ImageEmbeddingService {
 
         if (!modelFile.exists()) {
             modelFile.parentFile.mkdirs()
-            java.net.URI("https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx")
+            java.net
+                .URI("https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx")
                 .toURL()
                 .openStream()
                 .use { input -> modelFile.outputStream().use { output -> input.copyTo(output) } }
@@ -66,14 +73,16 @@ class ImageEmbeddingService {
 
         ortSession = ortEnv.createSession(modelPath, OrtSession.SessionOptions())
 
-        val embeddingCriteria = Criteria.builder()
-            .optApplication(Application.CV.IMAGE_CLASSIFICATION)
-            .setTypes(Image::class.java, FloatArray::class.java)
-            .optEngine("PyTorch")
-            .optArgument("name", "traced_resnet50")
-            .optTranslator(EmbeddingTranslator())
-            .optProgress(ProgressBar())
-            .build()
+        val embeddingCriteria =
+            Criteria
+                .builder()
+                .optApplication(Application.CV.IMAGE_CLASSIFICATION)
+                .setTypes(Image::class.java, FloatArray::class.java)
+                .optEngine("PyTorch")
+                .optArgument("name", "traced_resnet50")
+                .optTranslator(EmbeddingTranslator())
+                .optProgress(ProgressBar())
+                .build()
 
         embeddingModel = embeddingCriteria.loadModel()
         embeddingPredictor = embeddingModel.newPredictor()
@@ -91,34 +100,37 @@ class ImageEmbeddingService {
         g.dispose()
 
         val mean = floatArrayOf(0.485f, 0.456f, 0.406f)
-        val std  = floatArrayOf(0.229f, 0.224f, 0.225f)
+        val std = floatArrayOf(0.229f, 0.224f, 0.225f)
         val inputData = FloatArray(3 * size * size)
 
         for (y in 0 until size) {
             for (x in 0 until size) {
                 val rgb = resized.getRGB(x, y)
-                val r  = ((rgb shr 16) and 0xFF) / 255f
-                val gr = ((rgb shr 8)  and 0xFF) / 255f
-                val b  = ((rgb)        and 0xFF) / 255f
-                inputData[0 * size * size + y * size + x] = (r  - mean[0]) / std[0]
+                val r = ((rgb shr 16) and 0xFF) / 255f
+                val gr = ((rgb shr 8) and 0xFF) / 255f
+                val b = ((rgb) and 0xFF) / 255f
+                inputData[0 * size * size + y * size + x] = (r - mean[0]) / std[0]
                 inputData[1 * size * size + y * size + x] = (gr - mean[1]) / std[1]
-                inputData[2 * size * size + y * size + x] = (b  - mean[2]) / std[2]
+                inputData[2 * size * size + y * size + x] = (b - mean[2]) / std[2]
             }
         }
 
-        val inputTensor = OnnxTensor.createTensor(
-            ortEnv,
-            FloatBuffer.wrap(inputData),
-            longArrayOf(1, 3, size.toLong(), size.toLong())
-        )
+        val inputTensor =
+            OnnxTensor.createTensor(
+                ortEnv,
+                FloatBuffer.wrap(inputData),
+                longArrayOf(1, 3, size.toLong(), size.toLong()),
+            )
         val results = ortSession.run(mapOf("input.1" to inputTensor))
         val outputData = (results[0].value as Array<Array<Array<FloatArray>>>)[0][0]
 
         var minVal = Float.MAX_VALUE
         var maxVal = -Float.MAX_VALUE
-        for (row in outputData) for (v in row) {
-            if (v < minVal) minVal = v
-            if (v > maxVal) maxVal = v
+        for (row in outputData) {
+            for (v in row) {
+                if (v < minVal) minVal = v
+                if (v > maxVal) maxVal = v
+            }
         }
         val range = maxVal - minVal
 
@@ -136,20 +148,24 @@ class ImageEmbeddingService {
             }
         }
 
-        val xs = (0 until ow).filter { x ->
-            (0 until oh).any { y -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
-        }
-        val ys = (0 until oh).filter { y ->
-            (0 until ow).any { x -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
-        }
+        val xs =
+            (0 until ow).filter { x ->
+                (0 until oh).any { y -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
+            }
+        val ys =
+            (0 until oh).filter { y ->
+                (0 until ow).any { x -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
+            }
 
         if (xs.isEmpty() || ys.isEmpty()) return image
 
-        val cropped = output.getSubimage(
-            xs.first(), ys.first(),
-            xs.last() - xs.first() + 1,
-            ys.last() - ys.first() + 1
-        )
+        val cropped =
+            output.getSubimage(
+                xs.first(),
+                ys.first(),
+                xs.last() - xs.first() + 1,
+                ys.last() - ys.first() + 1,
+            )
         return ImageFactory.getInstance().fromImage(cropped)
     }
 
@@ -157,9 +173,10 @@ class ImageEmbeddingService {
         require(file.contentType?.startsWith("image/") == true) {
             "File must be an image, got: ${file.contentType}"
         }
-        val image = ByteArrayInputStream(file.bytes).use {
-            ImageFactory.getInstance().fromInputStream(it)
-        }
+        val image =
+            ByteArrayInputStream(file.bytes).use {
+                ImageFactory.getInstance().fromInputStream(it)
+            }
         val segmented = removeBackground(image)
         return embeddingPredictor.predict(segmented)
     }

@@ -7,7 +7,9 @@ import org.springframework.web.multipart.MultipartFile
 import preq.config.CloudinaryProperties
 
 @Service
-class CloudinaryService(private val props: CloudinaryProperties) {
+class CloudinaryService(
+    private val props: CloudinaryProperties,
+) {
     private val cloudinary = Cloudinary(props.url)
 
     fun upload(file: MultipartFile): String {

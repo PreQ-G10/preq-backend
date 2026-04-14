@@ -8,7 +8,6 @@ import preq.model.LocationProductPrice
 
 @Repository
 interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, Long> {
-
     @Query(
         value = """
             SELECT 
@@ -18,9 +17,11 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             FROM location_product_price
             WHERE product_id = :productId
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
-    fun getPriceStats(@Param("productId") productId: Long): Array<Any>
+    fun getPriceStats(
+        @Param("productId") productId: Long,
+    ): Array<Any>
 
     @Query(
         value = """
@@ -32,9 +33,11 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             ORDER BY reportCount DESC
             LIMIT 5
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
-    fun getTopLocations(@Param("productId") productId: Long): List<Array<Any>>
+    fun getTopLocations(
+        @Param("productId") productId: Long,
+    ): List<Array<Any>>
 
     fun findByProductIdOrderByReportedAtDesc(productId: Long): List<LocationProductPrice>
 }
