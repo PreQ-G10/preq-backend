@@ -14,8 +14,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import preq.Application
 import preq.service.ProductService
 import preq.web.controller.ProductDetectionController
-import preq.web.dto.response.ProductDetectionResponse
-import java.math.BigDecimal
+import preq.web.dto.ProductDetectionResponse
 
 @WebMvcTest(ProductDetectionController::class)
 @ContextConfiguration(classes = [Application::class])
@@ -34,7 +33,7 @@ class ProductDetectionControllerTest {
                     productId = 1L,
                     name = "Pasta de Maní",
                     brand = "Maní King",
-                    quantity = BigDecimal("485"),
+                    quantity = 485,
                     quantityType = "g",
                     imageUrl = "https://cloudinary.com/image.jpg",
                     similarity = 0.92,

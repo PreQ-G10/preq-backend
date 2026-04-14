@@ -21,4 +21,16 @@ interface ProductRepository : JpaRepository<Product, Long> {
     fun searchByName(
         @Param("name") name: String,
     ): List<Product>
+
+    @Query(
+        """
+        SELECT p 
+        FROM Product p 
+        WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :text, '%')) 
+            OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :text, '%'))
+        """,
+    )
+    fun findByOcrText(
+        @Param("text") text: String,
+    ): List<Product>
 }

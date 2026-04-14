@@ -5,10 +5,9 @@ import preq.model.LocationProductPrice
 import preq.repository.LocationProductPriceRepository
 import preq.repository.LocationRepository
 import preq.repository.ProductRepository
-import preq.web.dto.request.ReportProductPriceRequest
-import preq.web.dto.response.PriceSummaryResponse
+import preq.web.dto.PriceSummaryResponse
+import java.math.BigDecimal
 import java.time.LocalDateTime
-import kotlin.math.exp
 
 @Service
 class PriceService(
@@ -16,10 +15,11 @@ class PriceService(
     private val productRepository: ProductRepository,
     private val locationRepository: LocationRepository,
 ) {
-    fun reportPrice(reportProductPriceRequest: ReportProductPriceRequest): LocationProductPrice {
-        val productId = reportProductPriceRequest.productId
-        val locationId = reportProductPriceRequest.locationId
-        val price = reportProductPriceRequest.price
+    fun reportPrice(
+        productId: Long,
+        locationId: Long,
+        price: BigDecimal,
+    ): LocationProductPrice {
         val product = productRepository.findById(productId).orElseThrow()
         val location = locationRepository.findById(locationId).orElseThrow()
         return locationProductPriceRepository.save(
@@ -41,13 +41,13 @@ class PriceService(
         return PriceSummaryResponse.from(stats, topLocations, weightedPrice)
     }
 
-    private fun computeWeightedPrice(prices: List<LocationProductPrice>): Double? {
-        if (prices.isEmpty()) return null
+    private fun computeWeightedPrice(prices: List<LocationProductPrice>): Double {
+        if (prices.isEmpty()) return 0.0
         val decayFactor = 0.01
         var weightedSum = 0.0
         var totalWeight = 0.0
         prices.forEach { report ->
-            val weight = exp(-decayFactor * report.ageInDays())
+            val weight = Math.exp(-decayFactor * report.ageInDays())
             weightedSum += report.price.toDouble() * weight
             totalWeight += weight
         }
