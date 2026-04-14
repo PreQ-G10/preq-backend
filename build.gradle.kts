@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.2.0"
     id("org.springframework.boot") version "3.2.5"
     id("io.spring.dependency-management") version "1.1.4"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
 }
 
 group = "preq"
@@ -43,6 +43,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+ktlint {
+    version.set("1.3.1")
 }
 kotlin {
     jvmToolchain(21)
