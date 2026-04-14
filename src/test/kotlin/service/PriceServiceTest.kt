@@ -22,10 +22,11 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class PriceServiceTest {
-
     @Mock
     lateinit var locationProductPriceRepository: LocationProductPriceRepository
+
     @Mock lateinit var productRepository: ProductRepository
+
     @Mock lateinit var locationRepository: LocationRepository
 
     @InjectMocks
@@ -49,14 +50,16 @@ class PriceServiceTest {
 
     @Test
     fun `weighted price gives more weight to recent reports`() {
-        val recentPrice = LocationProductPrice().apply {
-            price = BigDecimal("1000.00")
-            reportedAt = LocalDateTime.now()
-        }
-        val oldPrice = LocationProductPrice().apply {
-            price = BigDecimal("100.00")
-            reportedAt = LocalDateTime.now().minusDays(365)
-        }
+        val recentPrice =
+            LocationProductPrice().apply {
+                price = BigDecimal("1000.00")
+                reportedAt = LocalDateTime.now()
+            }
+        val oldPrice =
+            LocationProductPrice().apply {
+                price = BigDecimal("100.00")
+                reportedAt = LocalDateTime.now().minusDays(365)
+            }
 
         whenever(locationProductPriceRepository.getPriceStats(1L))
             .thenReturn(arrayOf(550.0, 1000.0, 100.0))

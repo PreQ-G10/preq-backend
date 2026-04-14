@@ -15,12 +15,8 @@ import preq.web.dto.ProductDetectionResponse
 class ProductDetectionController(
     private val productService: ProductService,
 ) {
-
     @PostMapping("/image", consumes = ["multipart/form-data"])
     fun detectByImage(
-        @RequestPart("file") file: MultipartFile
-    ): List<ProductDetectionResponse> {
-        return productService.detect(file)
-    }
-
+        @RequestPart("file") file: MultipartFile,
+    ): List<ProductDetectionResponse> = productService.detect(file)
 }

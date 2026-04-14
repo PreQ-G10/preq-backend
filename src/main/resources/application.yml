@@ -16,5 +16,9 @@ u2net:
   model:
     path: ${U2NET_MODEL_PATH:${user.home}/.cache/u2net.onnx}
 
+resnet:
+  model:
+    path: ${RESNET_MODEL_PATH:${user.home}/.cache/traced_resnet50.pt}
+
 cloudinary:
   url: ${CLOUDINARY_URL}

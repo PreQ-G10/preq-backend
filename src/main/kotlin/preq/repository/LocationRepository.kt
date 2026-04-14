@@ -8,13 +8,15 @@ import preq.model.Location
 
 @Repository
 interface LocationRepository : JpaRepository<Location, Long> {
-
-    @Query("""
+    @Query(
+        """
         SELECT l 
         FROM Location l 
         WHERE LOWER(l.name) LIKE LOWER(CONCAT('%', :name, '%')) 
             OR LOWER(l.address) LIKE LOWER(CONCAT('%', :name, '%'))
-        """
+        """,
     )
-    fun searchByName(@Param("name") name: String): List<Location>
+    fun searchByName(
+        @Param("name") name: String,
+    ): List<Location>
 }

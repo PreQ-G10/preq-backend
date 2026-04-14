@@ -4,5 +4,5 @@ enum class LocationType {
     SUPERMARKET,
     STORE,
     PHARMACY,
-    OTHER
+    OTHER,
 }

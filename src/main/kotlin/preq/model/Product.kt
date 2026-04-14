@@ -1,12 +1,9 @@
 package preq.model
 
 import jakarta.persistence.CascadeType
-import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
-import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
@@ -15,7 +12,6 @@ import preq.enum.ProductImageStatus
 @Entity
 @Table(name = "products")
 class Product : BaseEntity() {
-
     @NotBlank
     @Column(nullable = false)
     lateinit var brand: String
@@ -38,6 +34,6 @@ class Product : BaseEntity() {
     val images: MutableList<ProductImage> = mutableListOf()
 
     fun approvedImages() = images.filter { it.status == ProductImageStatus.APPROVED }
-    fun hasBarcode() = barcode != null
 
+    fun hasBarcode() = barcode != null
 }

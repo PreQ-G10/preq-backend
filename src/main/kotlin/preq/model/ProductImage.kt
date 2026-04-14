@@ -1,6 +1,5 @@
 package preq.model
 
-import com.pgvector.PGvector
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity
@@ -16,7 +15,6 @@ import preq.enum.ProductImageStatus
 @Entity
 @Table(name = "product_image")
 class ProductImage : BaseEntity() {
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     var product: Product? = null
@@ -33,7 +31,10 @@ class ProductImage : BaseEntity() {
     var confidenceScore: Double = 0.0
 
     fun isApproved() = status == ProductImageStatus.APPROVED
+
     fun hasEmbedding() = embedding != null
-    fun embeddingAsString() = embedding?.joinToString(",", "[", "]")
-        ?: throw IllegalStateException("No embedding available")
+
+    fun embeddingAsString() =
+        embedding?.joinToString(",", "[", "]")
+            ?: throw IllegalStateException("No embedding available")
 }

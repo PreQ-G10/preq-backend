@@ -8,7 +8,6 @@ import preq.model.ProductImage
 
 @Repository
 interface ProductImageRepository : JpaRepository<ProductImage, Long> {
-
     @Query(
         value = """
             SELECT pi.product_id, 1 - (pi.embedding <=> CAST(:embedding AS vector)) AS similarity
@@ -18,10 +17,10 @@ interface ProductImageRepository : JpaRepository<ProductImage, Long> {
             ORDER BY pi.embedding <=> CAST(:embedding AS vector)
             LIMIT :limit
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
     fun findSimilarProducts(
         @Param("embedding") embedding: String,
-        @Param("limit") limit: Int = 10
+        @Param("limit") limit: Int = 10,
     ): List<Array<Any>>
 }
