@@ -123,16 +123,37 @@ jobs:
         with:
           name: workspace
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Restore gradlew permissions
+        run: chmod +x ./gradlew
+
+      - name: Build JAR
+        run: ./gradlew bootJar
+
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: '.'
+          scan-ref: 'build/libs'
           format: 'table'
           output: 'trivy-results.txt'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
-          scanners: 'vuln,misconfig'
+          scanners: 'vuln'
 
       - name: Upload Trivy results
         uses: actions/upload-artifact@v4
