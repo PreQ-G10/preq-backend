@@ -15,6 +15,7 @@ import preq.Application
 import preq.service.ProductService
 import preq.web.controller.ProductDetectionController
 import preq.web.dto.ProductDetectionResponse
+import java.math.BigDecimal
 
 @WebMvcTest(ProductDetectionController::class)
 @ContextConfiguration(classes = [Application::class])
@@ -33,7 +34,7 @@ class ProductDetectionControllerTest {
                     productId = 1L,
                     name = "Pasta de Maní",
                     brand = "Maní King",
-                    quantity = 485,
+                    quantity = BigDecimal("485"),
                     quantityType = "g",
                     imageUrl = "https://cloudinary.com/image.jpg",
                     similarity = 0.92,

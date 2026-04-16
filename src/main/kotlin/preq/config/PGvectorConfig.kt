@@ -6,15 +6,17 @@ import org.springframework.context.annotation.Configuration
 import javax.sql.DataSource
 
 @Configuration
-open class PGvectorConfig(private val dataSource: DataSource) {
-
+open class PGvectorConfig(
+    private val dataSource: DataSource,
+) {
     @PostConstruct
     fun init() {
         val hikari = dataSource as com.zaxxer.hikari.HikariDataSource
         repeat(hikari.maximumPoolSize) {
             try {
                 hikari.connection.use { conn ->
-                    conn.unwrap(org.postgresql.PGConnection::class.java)
+                    conn
+                        .unwrap(org.postgresql.PGConnection::class.java)
                         .addDataType("vector", PGvector::class.java)
                 }
             } catch (e: Exception) {
