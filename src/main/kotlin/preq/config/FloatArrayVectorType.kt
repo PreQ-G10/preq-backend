@@ -3,6 +3,7 @@ package preq.config
 import com.pgvector.PGvector
 import org.hibernate.engine.spi.SharedSessionContractImplementor
 import org.hibernate.usertype.UserType
+import org.postgresql.util.PGobject
 import java.io.Serializable
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -15,7 +16,11 @@ class FloatArrayVectorType : UserType<FloatArray> {
 
     override fun nullSafeGet(rs: ResultSet, position: Int, session: SharedSessionContractImplementor, owner: Any?): FloatArray? {
         val obj = rs.getObject(position) ?: return null
-        return (obj as PGvector).toArray()
+        return when (obj) {
+            is PGvector -> obj.toArray()
+            is PGobject -> PGvector(obj.value).toArray()
+            else -> throw ClassCastException("Cannot convert ${obj::class.java} to PGvector")
+        }
     }
 
     override fun nullSafeSet(st: PreparedStatement, value: FloatArray?, index: Int, session: SharedSessionContractImplementor) {
