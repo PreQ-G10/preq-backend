@@ -1,27 +1,22 @@
 package preq.service
 
 import org.springframework.stereotype.Service
-import preq.enum.LocationType
 import preq.model.Location
 import preq.repository.LocationRepository
-import preq.web.dto.LocationResponse
+import preq.web.dto.request.CreateLocationRequest
 
 @Service
 class LocationService(
     private val locationRepository: LocationRepository,
 ) {
-    fun search(name: String): List<LocationResponse> = locationRepository.searchByName(name).map { LocationResponse.from(it) }
+    fun search(name: String): List<Location> = locationRepository.searchByName(name)
 
-    fun create(
-        name: String,
-        address: String,
-        type: LocationType,
-    ): Location =
+    fun create(request: CreateLocationRequest): Location =
         locationRepository.save(
             Location().apply {
-                this.name = name
-                this.address = address
-                this.type = type
+                name = request.name
+                address = request.address
+                type = request.type
             },
         )
 }

@@ -1,4 +1,4 @@
-package preq.web.dto
+package preq.web.dto.response
 
 import preq.model.Product
 import java.math.BigDecimal
