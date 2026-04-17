@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import preq.Application
 import preq.service.ProductService
 import preq.web.controller.ProductDetectionController
-import preq.web.dto.ProductDetectionResponse
+import preq.web.dto.response.ProductDetectionResponse
 import java.math.BigDecimal
 
 @WebMvcTest(ProductDetectionController::class)
