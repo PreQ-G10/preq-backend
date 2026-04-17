@@ -1,4 +1,4 @@
-package preq.web.dto
+package preq.web.dto.response
 
 data class TopLocationResponse(
     val name: String,

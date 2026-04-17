@@ -7,7 +7,8 @@ import preq.model.Product
 import preq.model.ProductImage
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
-import preq.web.dto.ProductDetectionResponse
+import preq.web.dto.request.CreateProductRequest
+import preq.web.dto.response.ProductDetectionResponse
 
 @Service
 class ProductService(
@@ -22,19 +23,25 @@ class ProductService(
         val vectorString = embedding.joinToString(",", "[", "]")
 
         val results = productImageRepository.findSimilarProducts(vectorString, 10)
+        val productMap = productRepository.findAllById(results.map { it.getProductId() }).associateBy { it.id }
 
-        val productMap =
-            productRepository
-                .findAllById(
-                    results.map { (it[0] as Number).toLong() },
-                ).associateBy { it.id }
-
-        return results.mapNotNull { row ->
-            val productId = (row[0] as Number).toLong()
-            val similarity = (row[1] as Number).toDouble()
-            productMap[productId]?.let { ProductDetectionResponse.from(it, similarity, confidenceThreshold) }
+        return results.mapNotNull { result ->
+            productMap[result.getProductId()]?.let { product ->
+                ProductDetectionResponse.from(product, result.getSimilarity(), confidenceThreshold)
+            }
         }
     }
+
+    fun create(request: CreateProductRequest): Product =
+        productRepository.save(
+            Product().apply {
+                name = request.name
+                brand = request.brand
+                quantity = request.quantity
+                quantityType = request.quantityType
+                barcode = request.barcode
+            },
+        )
 
     fun confirmMatch(
         productId: Long,
