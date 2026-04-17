@@ -38,11 +38,12 @@ class PriceServiceTest {
     fun `reportPrice saves with correct product and location`() {
         val product = Product().apply { name = "Hileret" }
         val location = Location().apply { name = "Carrefour" }
-        val request = ReportProductPriceRequest(
-            productId = 1L,
-            locationId = 1L,
-            price = BigDecimal("500.00")
-        )
+        val request =
+            ReportProductPriceRequest(
+                productId = 1L,
+                locationId = 1L,
+                price = BigDecimal("500.00"),
+            )
 
         whenever(productRepository.findById(1L)).thenReturn(Optional.of(product))
         whenever(locationRepository.findById(1L)).thenReturn(Optional.of(location))
@@ -55,20 +56,25 @@ class PriceServiceTest {
 
     @Test
     fun `weighted price gives more weight to recent reports`() {
-        val recentPrice = LocationProductPrice().apply {
-            price = BigDecimal("1000.00")
-            reportedAt = LocalDateTime.now()
-        }
-        val oldPrice = LocationProductPrice().apply {
-            price = BigDecimal("100.00")
-            reportedAt = LocalDateTime.now().minusDays(365)
-        }
+        val recentPrice =
+            LocationProductPrice().apply {
+                price = BigDecimal("1000.00")
+                reportedAt = LocalDateTime.now()
+            }
+        val oldPrice =
+            LocationProductPrice().apply {
+                price = BigDecimal("100.00")
+                reportedAt = LocalDateTime.now().minusDays(365)
+            }
 
-        val mockStats = object : PriceStats {
-            override fun getAvgPrice() = 550.0
-            override fun getMaxPrice() = 1000.0
-            override fun getMinPrice() = 100.0
-        }
+        val mockStats =
+            object : PriceStats {
+                override fun getAvgPrice() = 550.0
+
+                override fun getMaxPrice() = 1000.0
+
+                override fun getMinPrice() = 100.0
+            }
 
         whenever(locationProductPriceRepository.getPriceStats(1L)).thenReturn(mockStats)
         whenever(locationProductPriceRepository.getTopLocations(1L)).thenReturn(emptyList())
