@@ -1,12 +1,13 @@
 package preq.web.dto
 
 import preq.model.Product
+import java.math.BigDecimal
 
 data class ProductResponse(
     val id: Long,
     val name: String,
     val brand: String,
-    val quantity: Int,
+    val quantity: BigDecimal,
     val quantityType: String,
     val barcode: String?,
     val images: List<String>,

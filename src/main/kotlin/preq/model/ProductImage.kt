@@ -1,7 +1,6 @@
 package preq.model
 
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -9,7 +8,8 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import preq.config.PGVectorConverter
+import org.hibernate.annotations.Type
+import preq.config.FloatArrayVectorType
 import preq.enum.ProductImageStatus
 
 @Entity
@@ -21,8 +21,8 @@ class ProductImage : BaseEntity() {
 
     var imageUrl: String = ""
 
-    @Column(columnDefinition = "vector(512)")
-    @Convert(converter = PGVectorConverter::class)
+    @Column(columnDefinition = "vector(1000)")
+    @Type(FloatArrayVectorType::class)
     var embedding: FloatArray? = null
 
     @Enumerated(EnumType.STRING)
