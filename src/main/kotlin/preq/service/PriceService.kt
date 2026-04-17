@@ -41,8 +41,8 @@ class PriceService(
         return PriceSummaryResponse.from(stats, topLocations, weightedPrice)
     }
 
-    private fun computeWeightedPrice(prices: List<LocationProductPrice>): Double {
-        if (prices.isEmpty()) return 0.0
+    private fun computeWeightedPrice(prices: List<LocationProductPrice>): Double? {
+        if (prices.isEmpty()) return null
         val decayFactor = 0.01
         var weightedSum = 0.0
         var totalWeight = 0.0

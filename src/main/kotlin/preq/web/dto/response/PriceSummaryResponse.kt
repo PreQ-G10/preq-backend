@@ -4,17 +4,17 @@ import preq.web.dto.projection.PriceStats
 import preq.web.dto.projection.TopLocationResult
 
 data class PriceSummaryResponse(
-    val avgPrice: Double,
-    val maxPrice: Double,
-    val minPrice: Double,
-    val weightedPrice: Double,
+    val avgPrice: Double?,
+    val maxPrice: Double?,
+    val minPrice: Double?,
+    val weightedPrice: Double?,
     val topLocations: List<TopLocationResponse>,
 ) {
     companion object {
         fun from(
             stats: PriceStats,
             topLocations: List<TopLocationResult>,
-            weightedPrice: Double,
+            weightedPrice: Double?,
         ) = PriceSummaryResponse(
             avgPrice = stats.getAvgPrice(),
             maxPrice = stats.getMaxPrice(),

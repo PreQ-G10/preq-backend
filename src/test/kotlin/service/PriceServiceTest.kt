@@ -83,6 +83,6 @@ class PriceServiceTest {
 
         val summary = priceService.getPriceSummary(1L)
 
-        assertTrue(summary.weightedPrice > 500.0)
+        assertTrue(summary.weightedPrice!! > 500.0)
     }
 }
