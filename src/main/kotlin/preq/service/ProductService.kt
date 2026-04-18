@@ -32,16 +32,44 @@ class ProductService(
         }
     }
 
-    fun create(request: CreateProductRequest): Product =
-        productRepository.save(
-            Product().apply {
-                name = request.name
-                brand = request.brand
-                quantity = request.quantity
-                quantityType = request.quantityType
-                barcode = request.barcode
+    fun create(request: CreateProductRequest): Product {
+        val product =
+            productRepository.save(
+                Product().apply {
+                    name = request.name
+                    brand = request.brand
+                    quantity = request.quantity
+                    quantityType = request.quantityType
+                    barcode = request.barcode
+                },
+            )
+
+        return product
+    }
+
+    fun addImage(
+        productId: Long,
+        file: MultipartFile,
+    ): Product {
+        val product =
+            productRepository
+                .findById(productId)
+                .orElseThrow { NoSuchElementException("Product not found") }
+        val imageUrl = cloudinaryService.upload(file)
+        val embedding = imageEmbeddingService.generateEmbedding(file)
+
+        product.images.add(
+            ProductImage().apply {
+                this.product = product
+                this.embedding = embedding
+                this.imageUrl = imageUrl
+                this.confidenceScore = 1.0
+                this.status = ProductImageStatus.APPROVED
             },
         )
+
+        return productRepository.save(product)
+    }
 
     fun confirmMatch(
         productId: Long,
