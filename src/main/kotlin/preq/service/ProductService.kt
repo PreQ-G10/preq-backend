@@ -32,6 +32,30 @@ class ProductService(
         }
     }
 
+    fun addImage(
+        productId: Long,
+        file: MultipartFile,
+    ): Product {
+        val product =
+            productRepository
+                .findById(productId)
+                .orElseThrow { NoSuchElementException("Product not found") }
+        val imageUrl = cloudinaryService.upload(file)
+        val embedding = imageEmbeddingService.generateEmbedding(file)
+
+        product.images.add(
+            ProductImage().apply {
+                this.product = product
+                this.embedding = embedding
+                this.imageUrl = imageUrl
+                this.confidenceScore = 1.0
+                this.status = ProductImageStatus.APPROVED
+            },
+        )
+
+        return productRepository.save(product)
+    }
+
     fun create(request: CreateProductRequest): Product =
         productRepository.save(
             Product().apply {
