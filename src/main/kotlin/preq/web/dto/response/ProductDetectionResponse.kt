@@ -1,20 +1,24 @@
-package preq.web.dto
+package preq.web.dto.response
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import preq.model.Product
+import java.math.BigDecimal
 
 data class ProductDetectionResponse(
     val productId: Long,
     val name: String,
     val brand: String,
-    val quantity: Int,
+    val quantity: BigDecimal,
     val quantityType: String,
     val imageUrl: String?,
     val similarity: Double,
-    val confident: Boolean
+    val confident: Boolean,
 ) {
     companion object {
-        fun from(product: Product, similarity: Double, confidenceThreshold: Double) = ProductDetectionResponse(
+        fun from(
+            product: Product,
+            similarity: Double,
+            confidenceThreshold: Double,
+        ) = ProductDetectionResponse(
             productId = product.id,
             name = product.name,
             brand = product.brand,
@@ -22,7 +26,7 @@ data class ProductDetectionResponse(
             quantityType = product.quantityType,
             imageUrl = product.approvedImages().firstOrNull()?.imageUrl,
             similarity = similarity,
-            confident = similarity >= confidenceThreshold
+            confident = similarity >= confidenceThreshold,
         )
     }
 }

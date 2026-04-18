@@ -5,10 +5,11 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import preq.model.LocationProductPrice
+import preq.web.dto.projection.PriceStats
+import preq.web.dto.projection.TopLocationResult
 
 @Repository
 interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, Long> {
-
     @Query(
         value = """
             SELECT 
@@ -18,9 +19,11 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             FROM location_product_price
             WHERE product_id = :productId
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
-    fun getPriceStats(@Param("productId") productId: Long): Array<Any>
+    fun getPriceStats(
+        @Param("productId") productId: Long,
+    ): PriceStats
 
     @Query(
         value = """
@@ -32,9 +35,11 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             ORDER BY reportCount DESC
             LIMIT 5
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
-    fun getTopLocations(@Param("productId") productId: Long): List<Array<Any>>
+    fun getTopLocations(
+        @Param("productId") productId: Long,
+    ): List<TopLocationResult>
 
     fun findByProductIdOrderByReportedAtDesc(productId: Long): List<LocationProductPrice>
 }

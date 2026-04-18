@@ -1,21 +1,18 @@
 package preq.model
 
 import jakarta.persistence.CascadeType
-import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
-import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
 import preq.enum.ProductImageStatus
+import java.math.BigDecimal
 
 @Entity
-@Table(name = "products")
+@Table(name = "product")
 class Product : BaseEntity() {
-
     @NotBlank
     @Column(nullable = false)
     lateinit var brand: String
@@ -24,12 +21,11 @@ class Product : BaseEntity() {
     @Column(nullable = false)
     lateinit var name: String
 
-    @NotBlank
     @Column(unique = true)
     var barcode: String? = null
 
-    @Column
-    var quantity: Int = 0
+    @Column(precision = 10, scale = 2)
+    var quantity: BigDecimal = BigDecimal.ZERO
 
     @Column
     var quantityType: String = ""
@@ -38,6 +34,6 @@ class Product : BaseEntity() {
     val images: MutableList<ProductImage> = mutableListOf()
 
     fun approvedImages() = images.filter { it.status == ProductImageStatus.APPROVED }
-    fun hasBarcode() = barcode != null
 
+    fun hasBarcode() = barcode != null
 }

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
@@ -23,22 +22,25 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class ProductServiceTest {
-
     @Mock lateinit var productRepository: ProductRepository
+
     @Mock lateinit var productImageRepository: ProductImageRepository
+
     @Mock lateinit var imageEmbeddingService: ImageEmbeddingService
+
     @Mock lateinit var cloudinaryService: CloudinaryService
     lateinit var productService: ProductService
 
     @BeforeEach
     fun setup() {
-        productService = ProductService(
-            productRepository,
-            productImageRepository,
-            imageEmbeddingService,
-            cloudinaryService,
-            confidenceThreshold = 0.78
-        )
+        productService =
+            ProductService(
+                productRepository,
+                productImageRepository,
+                imageEmbeddingService,
+                cloudinaryService,
+                confidenceThreshold = 0.78,
+            )
     }
 
     @Test

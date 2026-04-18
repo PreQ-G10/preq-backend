@@ -5,16 +5,31 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  sql:
+    init:
+      data-locations: classpath:seed.sql
+      mode: always
+
 u2net:
   model:
     path: ${U2NET_MODEL_PATH:${user.home}/.cache/u2net.onnx}
+
+resnet:
+  model:
+    path: ${RESNET_MODEL_PATH:${user.home}/.cache/traced_resnet50.pt}
 
 cloudinary:
   url: ${CLOUDINARY_URL}

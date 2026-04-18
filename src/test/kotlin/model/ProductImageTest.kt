@@ -9,7 +9,6 @@ import preq.enum.ProductImageStatus
 import preq.model.ProductImage
 
 class ProductImageTest {
-
     @Test
     fun `isApproved returns true only for approved status`() {
         val approved = ProductImage().apply { status = ProductImageStatus.APPROVED }
@@ -27,9 +26,10 @@ class ProductImageTest {
 
     @Test
     fun `embeddingAsString returns correct pgvector format`() {
-        val image = ProductImage().apply {
-            embedding = floatArrayOf(0.1f, 0.2f, 0.3f)
-        }
+        val image =
+            ProductImage().apply {
+                embedding = floatArrayOf(0.1f, 0.2f, 0.3f)
+            }
         assertEquals("[0.1,0.2,0.3]", image.embeddingAsString())
     }
 }

@@ -12,7 +12,6 @@ import java.time.temporal.ChronoUnit
 @Entity
 @Table(name = "location_product_price")
 class LocationProductPrice : BaseEntity() {
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     var product: Product? = null
