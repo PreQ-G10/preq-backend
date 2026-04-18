@@ -71,6 +71,17 @@ class ProductService(
         return productRepository.save(product)
     }
 
+    fun create(request: CreateProductRequest): Product =
+        productRepository.save(
+            Product().apply {
+                name = request.name
+                brand = request.brand
+                quantity = request.quantity
+                quantityType = request.quantityType
+                barcode = request.barcode
+            },
+        )
+
     fun confirmMatch(
         productId: Long,
         file: MultipartFile,
