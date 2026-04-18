@@ -32,21 +32,6 @@ class ProductService(
         }
     }
 
-    fun create(request: CreateProductRequest): Product {
-        val product =
-            productRepository.save(
-                Product().apply {
-                    name = request.name
-                    brand = request.brand
-                    quantity = request.quantity
-                    quantityType = request.quantityType
-                    barcode = request.barcode
-                },
-            )
-
-        return product
-    }
-
     fun addImage(
         productId: Long,
         file: MultipartFile,
