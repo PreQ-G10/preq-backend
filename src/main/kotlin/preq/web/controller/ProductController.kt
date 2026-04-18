@@ -28,6 +28,12 @@ class ProductController(
         @RequestBody request: CreateProductRequest,
     ): ProductResponse = ProductResponse.from(productService.create(request))
 
+    @PostMapping("/{productId}/image", consumes = ["multipart/form-data"])
+    fun uploadImage(
+        @PathVariable productId: Long,
+        @RequestPart("file") file: MultipartFile,
+    ): ProductResponse = ProductResponse.from(productService.addImage(productId, file))
+
     @PostMapping("/{productId}/confirm-image", consumes = ["multipart/form-data"])
     fun confirmImage(
         @PathVariable productId: Long,
