@@ -9,9 +9,9 @@ import reactor.core.publisher.Mono
 class BarcodeService(
     private val webClient: WebClient =
         WebClient
-        .builder()
-        .baseUrl("https://world.openfoodfacts.org/api/v2")
-        .build(),
+            .builder()
+            .baseUrl("https://world.openfoodfacts.org/api/v2")
+            .build(),
 ) {
     fun getProduct(barcode: String): OpenFoodFactsResponse? =
         webClient
@@ -20,7 +20,6 @@ class BarcodeService(
             .retrieve()
             .onStatus({ it.value() == 404 }) {
                 Mono.error { NoSuchElementException() }
-            }
-            .bodyToMono(OpenFoodFactsResponse::class.java)
+            }.bodyToMono(OpenFoodFactsResponse::class.java)
             .block()
 }
