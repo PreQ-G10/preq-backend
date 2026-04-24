@@ -45,7 +45,9 @@ class ProductController(
     }
 
     @GetMapping("/barcode/{barcode}")
-    fun getByBarcode(@PathVariable barcode: String): ProductResponse {
+    fun getByBarcode(
+        @PathVariable barcode: String
+    ): ProductResponse {
         val prod = productService.getOrCreateByBarcode(barcode)
         return ProductResponse.from(prod)
     }

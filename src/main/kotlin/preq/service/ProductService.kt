@@ -25,8 +25,7 @@ class ProductService(
         val existing = productRepository.findByBarcode(barcode)
         if (existing != null) return existing
 
-        val response = barcodeService.getProduct(barcode)
-            ?: throw RuntimeException("API error")
+        val response = barcodeService.getProduct(barcode) ?: throw RuntimeException("API error")
 
         if (response.status != 1 || response.product == null) {
             throw NoSuchElementException()
