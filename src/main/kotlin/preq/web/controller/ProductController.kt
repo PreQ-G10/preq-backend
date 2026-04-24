@@ -43,4 +43,10 @@ class ProductController(
         val product = productService.confirmMatch(productId, file, similarity)
         return ProductResponse.from(product)
     }
+
+    @GetMapping("/barcode/{barcode}")
+    fun getByBarcode(@PathVariable barcode: String): ProductResponse {
+        val prod = productService.getOrCreateByBarcode(barcode)
+        return ProductResponse.from(prod)
+    }
 }
