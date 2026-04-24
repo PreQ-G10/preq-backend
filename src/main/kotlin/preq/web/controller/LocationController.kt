@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import preq.service.LocationService
 import preq.web.dto.request.CreateLocationRequest
+import preq.web.dto.response.LocationDetectionResponse
 import preq.web.dto.response.LocationResponse
 
 @RestController
@@ -24,4 +25,10 @@ class LocationController(
     fun create(
         @RequestBody request: CreateLocationRequest,
     ): LocationResponse = LocationResponse.from(locationService.create(request))
+
+    @PostMapping("/nearby")
+    fun findNearby(
+        @RequestParam latitude: Double,
+        @RequestParam longitude: Double,
+    ): LocationDetectionResponse = locationService.findNearby(latitude, longitude)
 }
