@@ -9,7 +9,7 @@ import preq.web.dto.response.OpenFoodFactsProductResponse
 class ProductMapper {
     fun fromApi(
         barcode: String,
-        api: OpenFoodFactsProductResponse
+        api: OpenFoodFactsProductResponse,
     ): Product {
         val product = Product()
         val productImg = ProductImage()

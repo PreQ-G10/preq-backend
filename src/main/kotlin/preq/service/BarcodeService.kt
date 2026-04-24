@@ -7,13 +7,15 @@ import reactor.core.publisher.Mono
 
 @Service
 class BarcodeService(
-    private val webClient: WebClient = WebClient
+    private val webClient: WebClient =
+        WebClient
         .builder()
         .baseUrl("https://world.openfoodfacts.org/api/v2")
         .build(),
 ) {
     fun getProduct(barcode: String): OpenFoodFactsResponse? =
-        webClient.get()
+        webClient
+            .get()
             .uri("/product/$barcode.json")
             .retrieve()
             .onStatus({ it.value() == 404 }) {
