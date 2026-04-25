@@ -2,6 +2,7 @@ package preq.web.dto.response
 
 import preq.enum.LocationType
 import preq.model.Location
+import preq.web.dto.projection.LocationWithDistance
 
 data class LocationResponse(
     val id: Long,
@@ -16,6 +17,14 @@ data class LocationResponse(
                 name = location.name,
                 address = location.address,
                 type = location.type,
+            )
+
+        fun from(projection: LocationWithDistance) =
+            LocationResponse(
+                id = projection.getId(),
+                name = projection.getName(),
+                address = projection.getAddress(),
+                type = LocationType.valueOf(projection.getType()),
             )
     }
 }

@@ -6,4 +6,6 @@ data class CreateLocationRequest(
     val name: String,
     val address: String,
     val type: LocationType,
+    val latitude: Double,
+    val longitude: Double,
 )
