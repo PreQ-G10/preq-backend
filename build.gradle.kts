@@ -26,9 +26,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     implementation("com.pgvector:pgvector:0.1.4")
+    implementation("org.hibernate.orm:hibernate-spatial")
     implementation("com.microsoft.onnxruntime:onnxruntime:1.17.0")
     implementation("org.bytedeco:javacv-platform:1.5.10")
     implementation("net.sourceforge.tess4j:tess4j:5.10.0")
+    implementation("com.drewnoakes:metadata-extractor:2.19.0")
     implementation("com.cloudinary:cloudinary-http44:1.38.0")
     implementation(platform("ai.djl:bom:0.31.1"))
     implementation("ai.djl:api:0.31.1")
