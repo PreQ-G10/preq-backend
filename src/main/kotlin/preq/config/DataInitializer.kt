@@ -109,7 +109,7 @@ class DataInitializer(
             LocationSeed("Coto", "Av 12 de Octubre 3054", LocationType.SUPERMARKET, -34.7423815, -58.2895529),
             LocationSeed("Test", "Av Test 123", LocationType.SUPERMARKET, -34.75426616419045, -58.282812872353965),
             LocationSeed(
-                "Cwentro de Estudiantes CyT",
+                "Centro de Estudiantes CyT",
                 "Rodriguez Saenz Peña 352",
                 LocationType.STORE,
                 -34.705967337092886,
