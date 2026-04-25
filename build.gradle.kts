@@ -6,6 +6,7 @@ plugins {
 }
 
 extra["tomcat.version"] = "10.1.54"
+extra["netty.version"] = "4.1.132.Final"
 
 group = "preq"
 version = "1.0-SNAPSHOT"
