@@ -6,6 +6,7 @@ plugins {
 }
 
 extra["tomcat.version"] = "10.1.54"
+extra["netty.version"] = "4.1.132.Final"
 
 group = "preq"
 version = "1.0-SNAPSHOT"
@@ -19,6 +20,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
