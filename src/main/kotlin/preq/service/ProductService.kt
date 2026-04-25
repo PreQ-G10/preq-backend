@@ -7,6 +7,7 @@ import preq.model.Product
 import preq.model.ProductImage
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
+import preq.service.mapper.ProductMapper
 import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.ProductDetectionResponse
 
@@ -16,8 +17,25 @@ class ProductService(
     private val productImageRepository: ProductImageRepository,
     private val imageEmbeddingService: ImageEmbeddingService,
     private val cloudinaryService: CloudinaryService,
+    private val barcodeService: BarcodeService,
+    private val apiMapper: ProductMapper,
     private val confidenceThreshold: Double = 0.78,
 ) {
+    fun getOrCreateByBarcode(barcode: String): Product {
+        val existing = productRepository.findByBarcode(barcode)
+        if (existing != null) return existing
+
+        val response = barcodeService.getProduct(barcode) ?: throw RuntimeException("API error")
+
+        if (response.status != 1 || response.product == null) {
+            throw NoSuchElementException()
+        }
+
+        val product = apiMapper.fromApi(barcode, response.product)
+
+        return productRepository.save(product)
+    }
+
     fun detect(file: MultipartFile): List<ProductDetectionResponse> {
         val embedding = imageEmbeddingService.generateEmbedding(file)
         val vectorString = embedding.joinToString(",", "[", "]")

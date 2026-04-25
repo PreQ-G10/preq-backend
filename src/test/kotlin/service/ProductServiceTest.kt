@@ -15,9 +15,11 @@ import preq.enum.ProductImageStatus
 import preq.model.Product
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
+import preq.service.BarcodeService
 import preq.service.CloudinaryService
 import preq.service.ImageEmbeddingService
 import preq.service.ProductService
+import preq.service.mapper.ProductMapper
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -29,6 +31,11 @@ class ProductServiceTest {
     @Mock lateinit var imageEmbeddingService: ImageEmbeddingService
 
     @Mock lateinit var cloudinaryService: CloudinaryService
+
+    @Mock lateinit var barcodeService: BarcodeService
+
+    @Mock lateinit var apiMapper: ProductMapper
+
     lateinit var productService: ProductService
 
     @BeforeEach
@@ -40,6 +47,8 @@ class ProductServiceTest {
                 imageEmbeddingService,
                 cloudinaryService,
                 confidenceThreshold = 0.78,
+                barcodeService = barcodeService,
+                apiMapper = apiMapper,
             )
     }
 
