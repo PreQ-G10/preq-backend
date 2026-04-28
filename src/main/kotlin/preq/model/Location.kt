@@ -1,12 +1,14 @@
 package preq.model
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.locationtech.jts.geom.Point
 import preq.enum.LocationType
 
 @Entity
@@ -20,6 +22,9 @@ class Location : BaseEntity() {
 
     var latitude: Double? = null
     var longitude: Double? = null
+
+    @Column(columnDefinition = "geometry(Point, 4326)")
+    var coordinates: Point? = null
 
     @OneToMany(mappedBy = "location", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val prices: MutableList<LocationProductPrice> = mutableListOf()

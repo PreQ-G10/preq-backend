@@ -1,5 +1,8 @@
 package preq.config
 
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.PrecisionModel
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
@@ -21,6 +24,7 @@ class DataInitializer(
     private val locationProductPriceRepository: LocationProductPriceRepository,
 ) : ApplicationRunner {
     private val rng = Random(42)
+    private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
 
     // ─────────────────────────────────────────────────────────
     // Reference prices — used to generate realistic price reports
@@ -103,6 +107,14 @@ class DataInitializer(
             LocationSeed("Coto", "Humberto Primo 165", LocationType.SUPERMARKET, -34.7248423, -58.2555763),
             LocationSeed("Coto", "Av Hipólito Yrigoyen 380", LocationType.SUPERMARKET, -34.7197752, -58.2622978),
             LocationSeed("Coto", "Av 12 de Octubre 3054", LocationType.SUPERMARKET, -34.7423815, -58.2895529),
+            LocationSeed("Test", "Av Test 123", LocationType.SUPERMARKET, -34.75426616419045, -58.282812872353965),
+            LocationSeed(
+                "Centro de Estudiantes CyT",
+                "Rodriguez Saenz Peña 352",
+                LocationType.STORE,
+                -34.705967337092886,
+                -58.27784788792694,
+            ),
         )
 
     // ─────────────────────────────────────────────────────────
@@ -121,8 +133,13 @@ class DataInitializer(
     // Step 1 — Locations
     // ─────────────────────────────────────────────────────────
 
-    private fun createLocations(): List<Location> =
-        locationSeeds.map { seed ->
+    private fun createLocations(): List<Location> {
+        if (locationRepository.count() > 0) {
+            println("DataInitializer: Locations already seeded, skipping.")
+            return locationRepository.findAll()
+        }
+
+        return locationSeeds.map { seed ->
             locationRepository.save(
                 Location().apply {
                     name = seed.name
@@ -130,9 +147,14 @@ class DataInitializer(
                     type = seed.type
                     latitude = seed.latitude
                     longitude = seed.longitude
+                    coordinates =
+                        geometryFactory.createPoint(
+                            Coordinate(seed.longitude, seed.latitude),
+                        )
                 },
             )
         }
+    }
 
     // ─────────────────────────────────────────────────────────
     // Step 2 — Price reports with dynamic dates
