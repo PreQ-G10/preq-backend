@@ -48,16 +48,12 @@ class ProductController(
     @GetMapping("/barcode/{barcode}")
     fun getByBarcode(
         @PathVariable barcode: String,
-    ): BarcodeDetectionResponse {
-        return productService.getOrCreateByBarcode(barcode)
-    }
+    ): BarcodeDetectionResponse = productService.getOrCreateByBarcode(barcode)
 
     @PostMapping("/{id}/resolve-barcode-collision")
     fun resolveBarcodeCollision(
         @PathVariable id: Long,
         @RequestParam barcode: String,
         @RequestParam confirm: Boolean,
-    ): ProductResponse {
-        return ProductResponse.from(productService.resolveBarcodeCollision(id, barcode, confirm))
-    }
+    ): ProductResponse = ProductResponse.from(productService.resolveBarcodeCollision(id, barcode, confirm))
 }

@@ -15,9 +15,9 @@ import preq.enum.ProductImageStatus
 import preq.model.Product
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
-import preq.service.OpenFoodFactsService
 import preq.service.CloudinaryService
 import preq.service.ImageEmbeddingService
+import preq.service.OpenFoodFactsService
 import preq.service.ProductService
 import preq.util.mapper.ProductMapper
 import java.util.Optional

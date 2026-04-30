@@ -12,10 +12,11 @@ object ProductMapper {
         val product = Product()
 
         api.image_front_url?.takeIf { it.isNotBlank() }?.let { url ->
-            val productImg = ProductImage().apply {
-                this.product = product
-                this.imageUrl = url
-            }
+            val productImg =
+                ProductImage().apply {
+                    this.product = product
+                    this.imageUrl = url
+                }
             product.images.add(productImg)
         }
 
