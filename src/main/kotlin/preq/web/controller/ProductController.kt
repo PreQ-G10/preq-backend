@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import preq.service.ProductService
 import preq.web.dto.request.CreateProductRequest
+import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.ProductResponse
 
 @RestController
@@ -47,8 +48,16 @@ class ProductController(
     @GetMapping("/barcode/{barcode}")
     fun getByBarcode(
         @PathVariable barcode: String,
+    ): BarcodeDetectionResponse {
+        return productService.getOrCreateByBarcode(barcode)
+    }
+
+    @PostMapping("/{id}/resolve-barcode-collision")
+    fun resolveBarcodeCollision(
+        @PathVariable id: Long,
+        @RequestParam barcode: String,
+        @RequestParam confirm: Boolean,
     ): ProductResponse {
-        val prod = productService.getOrCreateByBarcode(barcode)
-        return ProductResponse.from(prod)
+        return ProductResponse.from(productService.resolveBarcodeCollision(id, barcode, confirm))
     }
 }
