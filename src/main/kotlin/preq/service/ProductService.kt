@@ -2,14 +2,18 @@ package preq.service
 
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import preq.enum.BarcodeDetectionStatus
 import preq.enum.ProductImageStatus
+import preq.exceptions.ExternalApiException
 import preq.model.Product
 import preq.model.ProductImage
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
-import preq.service.mapper.ProductMapper
+import preq.util.mapper.ProductMapper
 import preq.web.dto.request.CreateProductRequest
+import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.ProductDetectionResponse
+import preq.web.dto.response.ProductResponse
 
 @Service
 class ProductService(
@@ -17,23 +21,80 @@ class ProductService(
     private val productImageRepository: ProductImageRepository,
     private val imageEmbeddingService: ImageEmbeddingService,
     private val cloudinaryService: CloudinaryService,
-    private val barcodeService: BarcodeService,
-    private val apiMapper: ProductMapper,
+    private val openFoodFactsService: OpenFoodFactsService,
     private val confidenceThreshold: Double = 0.78,
 ) {
-    fun getOrCreateByBarcode(barcode: String): Product {
+    val productMapper = ProductMapper
+
+    fun getOrCreateByBarcode(barcode: String): BarcodeDetectionResponse {
+        // Already in DB
         val existing = productRepository.findByBarcode(barcode)
-        if (existing != null) return existing
+        if (existing != null) return BarcodeDetectionResponse(
+            status = BarcodeDetectionStatus.FOUND,
+            product = ProductResponse.from(existing)
+        )
 
-        val response = barcodeService.getProduct(barcode) ?: throw RuntimeException("API error")
-
+        // Query external API
+        val response = openFoodFactsService.getProduct(barcode)
+            ?: return BarcodeDetectionResponse(status = BarcodeDetectionStatus.NOT_FOUND)
         if (response.status != 1 || response.product == null) {
-            throw NoSuchElementException()
+            return BarcodeDetectionResponse(status = BarcodeDetectionStatus.NOT_FOUND)
         }
 
-        val product = apiMapper.fromApi(barcode, response.product)
+        val apiResponse = response.product
+        val name = apiResponse.product_name?.takeIf { it.isNotBlank() }
+            ?: return BarcodeDetectionResponse(status = BarcodeDetectionStatus.INCOMPLETE_DATA)
+        val brand = apiResponse.brands?.takeIf { it.isNotBlank() }
+            ?: return BarcodeDetectionResponse(status = BarcodeDetectionStatus.INCOMPLETE_DATA)
+        val quantity = apiResponse.product_quantity
+            ?: return BarcodeDetectionResponse(status = BarcodeDetectionStatus.INCOMPLETE_DATA)
+        val quantityType = apiResponse.product_quantity_unit?.takeIf { it.isNotBlank() }
+            ?: return BarcodeDetectionResponse(status = BarcodeDetectionStatus.INCOMPLETE_DATA)
 
-        return productRepository.save(product)
+        // Check for manual product collision
+        val collisions = productRepository.findPotentialCollisions(
+             name, brand, quantity, quantityType
+        )
+        val collision = collisions.firstOrNull()
+
+        if (collision != null) {
+            val apiProductMapped = productMapper.fromOpenFoodFactsApiResponse(barcode, apiResponse)
+            return BarcodeDetectionResponse(
+                status = BarcodeDetectionStatus.COLLISION,
+                apiProduct = ProductResponse(
+                    id = collision.id,
+                    name = apiProductMapped.name,
+                    brand = apiProductMapped.brand,
+                    quantity = apiProductMapped.quantity,
+                    quantityType = apiProductMapped.quantityType,
+                    barcode = barcode,
+                    images = apiProductMapped.images.map { it.imageUrl },
+                ),
+                existingProduct = ProductResponse.from(collision)
+            )
+        }
+
+        // No collision, create new
+        val product = productRepository.save(productMapper.fromOpenFoodFactsApiResponse(barcode, response.product))
+        return BarcodeDetectionResponse(
+            status = BarcodeDetectionStatus.CREATED,
+            product = ProductResponse.from(product)
+        )
+    }
+
+    fun resolveBarcodeCollision(existingId: Long, barcode: String, confirm: Boolean): Product {
+        if (confirm) {
+            // User confirmed — assign barcode to existing product
+            val product = productRepository.findById(existingId).orElseThrow()
+            product.barcode = barcode
+            return productRepository.save(product)
+        } else {
+            // User denied — create new product from API
+            val response = openFoodFactsService.getProduct(barcode)
+                ?: throw ExternalApiException("OpenFoodFacts API error")
+            if (response.status != 1 || response.product == null) throw NoSuchElementException()
+            return productRepository.save(productMapper.fromOpenFoodFactsApiResponse(barcode, response.product))
+        }
     }
 
     fun detect(file: MultipartFile): List<ProductDetectionResponse> {

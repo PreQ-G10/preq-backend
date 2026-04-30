@@ -6,7 +6,7 @@ import preq.web.dto.response.OpenFoodFactsResponse
 import reactor.core.publisher.Mono
 
 @Service
-class BarcodeService(
+class OpenFoodFactsService(
     private val webClient: WebClient =
         WebClient
             .builder()
@@ -19,7 +19,7 @@ class BarcodeService(
             .uri("/product/$barcode.json")
             .retrieve()
             .onStatus({ it.value() == 404 }) {
-                Mono.error { NoSuchElementException() }
+                Mono.empty()
             }.bodyToMono(OpenFoodFactsResponse::class.java)
             .block()
 }
