@@ -43,7 +43,9 @@ interface ProductRepository : JpaRepository<Product, Long> {
         unaccent(lower(concat(p.name, ' ', p.brand))),
         unaccent(lower(concat(:name, ' ', :brand)))
     ) DESC
-    """, nativeQuery = true)
+    """,
+        nativeQuery = true,
+    )
     fun findPotentialCollisions(
         name: String,
         brand: String,

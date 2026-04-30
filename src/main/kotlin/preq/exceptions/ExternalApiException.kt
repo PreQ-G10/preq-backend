@@ -1,3 +1,5 @@
 package preq.exceptions
 
-class ExternalApiException(message: String) : RuntimeException(message)
+class ExternalApiException(
+    message: String,
+) : RuntimeException(message)
