@@ -7,6 +7,7 @@ plugins {
 
 extra["tomcat.version"] = "10.1.54"
 extra["netty.version"] = "4.1.132.Final"
+extra["spring-security.version"] = "6.5.9"
 
 group = "preq"
 version = "1.0-SNAPSHOT"
