@@ -14,13 +14,12 @@ import preq.service.JwtService
 @Component
 class JwtAuthFilter(
     private val jwtService: JwtService,
-    private val userDetailsService: UserDetailsService
+    private val userDetailsService: UserDetailsService,
 ) : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val authHeader = request.getHeader("Authorization")
 
@@ -36,9 +35,12 @@ class JwtAuthFilter(
             val userDetails = runCatching { userDetailsService.loadUserByUsername(email) }.getOrNull()
 
             if (userDetails != null && jwtService.isTokenValid(token)) {
-                val authToken = UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.authorities
-                )
+                val authToken =
+                    UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.authorities,
+                    )
                 authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
                 SecurityContextHolder.getContext().authentication = authToken
             }

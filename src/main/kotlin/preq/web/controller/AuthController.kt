@@ -13,18 +13,20 @@ import preq.web.dto.response.AuthResponse
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-    private val authService: AuthService
+    private val authService: AuthService,
 ) {
-
     @PostMapping("/register")
-    fun register(@RequestBody request: RegisterRequest): AuthResponse =
-        authService.register(request)
+    fun register(
+        @RequestBody request: RegisterRequest,
+    ): AuthResponse = authService.register(request)
 
     @PostMapping("/login")
-    fun login(@RequestBody request: LoginRequest): AuthResponse =
-        authService.login(request)
+    fun login(
+        @RequestBody request: LoginRequest,
+    ): AuthResponse = authService.login(request)
 
     @PostMapping("/refresh")
-    fun refresh(@RequestBody request: RefreshTokenRequest): AuthResponse =
-        authService.refresh(request)
+    fun refresh(
+        @RequestBody request: RefreshTokenRequest,
+    ): AuthResponse = authService.refresh(request)
 }
