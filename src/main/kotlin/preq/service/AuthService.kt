@@ -19,9 +19,8 @@ class AuthService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
-    private val authenticationManager: AuthenticationManager
+    private val authenticationManager: AuthenticationManager,
 ) {
-
     fun register(request: RegisterRequest): AuthResponse {
         if (userRepository.existsByEmail(request.email)) {
             throw IllegalArgumentException("Email already registered")
@@ -29,34 +28,39 @@ class AuthService(
 
         print(request)
 
-        val user = User().apply {
-            this.name = request.name
-            this.lastName = request.lastName
-            this.address = request.address
-            this.addressLocation = (if (request.latitude != null && request.longitude != null) {
-                GeometryFactory(PrecisionModel(), 4326)
-                    .createPoint(Coordinate(request.longitude, request.latitude))
-            } else null)
-            this.email = request.email
-            this.password = passwordEncoder.encode(request.password)
-        }
+        val user =
+            User().apply {
+                this.name = request.name
+                this.lastName = request.lastName
+                this.address = request.address
+                this.addressLocation = (
+                    if (request.latitude != null && request.longitude != null) {
+                        GeometryFactory(PrecisionModel(), 4326)
+                            .createPoint(Coordinate(request.longitude, request.latitude))
+                    } else {
+                        null
+                    }
+                )
+                this.email = request.email
+                this.password = passwordEncoder.encode(request.password)
+            }
 
         userRepository.save(user)
 
         return AuthResponse(
             accessToken = jwtService.generateAccessToken(user.email),
-            refreshToken = jwtService.generateRefreshToken(user.email)
+            refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
 
     fun login(request: LoginRequest): AuthResponse {
         authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(request.email, request.password)
+            UsernamePasswordAuthenticationToken(request.email, request.password),
         )
 
         return AuthResponse(
             accessToken = jwtService.generateAccessToken(request.email),
-            refreshToken = jwtService.generateRefreshToken(request.email)
+            refreshToken = jwtService.generateRefreshToken(request.email),
         )
     }
 
@@ -69,7 +73,7 @@ class AuthService(
 
         return AuthResponse(
             accessToken = jwtService.generateAccessToken(email),
-            refreshToken = jwtService.generateRefreshToken(email)
+            refreshToken = jwtService.generateRefreshToken(email),
         )
     }
 }

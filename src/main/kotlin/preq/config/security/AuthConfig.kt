@@ -12,21 +12,20 @@ import preq.repository.UserRepository
 
 @Configuration
 open class AuthConfig(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
-
     @Bean
     open fun userDetailsService(): UserDetailsService =
         UserDetailsService { email ->
-            userRepository.findByEmail(email)
+            userRepository
+                .findByEmail(email)
                 .map { user ->
                     org.springframework.security.core.userdetails.User
                         .withUsername(user.email)
                         .password(user.password)
                         .roles(user.role.name)
                         .build()
-                }
-                .orElseThrow { UsernameNotFoundException("User not found: $email") }
+                }.orElseThrow { UsernameNotFoundException("User not found: $email") }
         }
 
     @Bean

@@ -7,5 +7,5 @@ data class RegisterRequest(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val email: String,
-    val password: String
+    val password: String,
 )
