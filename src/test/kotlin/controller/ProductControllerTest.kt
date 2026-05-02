@@ -5,7 +5,9 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -15,17 +17,25 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import preq.Application
 import preq.model.Product
+import preq.service.JwtService
 import preq.service.ProductService
 import preq.web.controller.ProductController
 
 @WebMvcTest(ProductController::class)
 @ContextConfiguration(classes = [Application::class])
+@AutoConfigureMockMvc(addFilters = false)
 class ProductControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @MockitoBean
     lateinit var productService: ProductService
+
+    @MockitoBean
+    lateinit var jwtService: JwtService
+
+    @MockitoBean
+    lateinit var userDetailsService: UserDetailsService
 
     @Test
     fun `GET search returns matching products`() {
