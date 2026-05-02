@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -12,6 +14,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multi
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import preq.Application
+import preq.service.JwtService
 import preq.service.ProductService
 import preq.web.controller.ProductDetectionController
 import preq.web.dto.response.ProductDetectionResponse
@@ -19,12 +22,19 @@ import java.math.BigDecimal
 
 @WebMvcTest(ProductDetectionController::class)
 @ContextConfiguration(classes = [Application::class])
+@AutoConfigureMockMvc(addFilters = false)
 class ProductDetectionControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @MockitoBean
     lateinit var productService: ProductService
+
+    @MockitoBean
+    lateinit var jwtService: JwtService
+
+    @MockitoBean
+    lateinit var userDetailsService: UserDetailsService
 
     @Test
     fun `POST detect image returns 200 with results`() {
