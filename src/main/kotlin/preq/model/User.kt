@@ -6,13 +6,12 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotBlank
-import preq.enum.UserRole
 import org.locationtech.jts.geom.Point
+import preq.enum.UserRole
 
 @Entity
 @Table(name = "users")
 class User : BaseEntity() {
-
     @NotBlank
     @Column(nullable = false)
     lateinit var name: String
