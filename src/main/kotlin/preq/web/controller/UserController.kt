@@ -16,8 +16,7 @@ class UserController(
     private val userService: UserService,
 ) {
     @GetMapping("/me")
-    fun getProfile(principal: Principal): UserProfileResponse =
-        userService.getProfile(principal.name)
+    fun getProfile(principal: Principal): UserProfileResponse = userService.getProfile(principal.name)
 
     @PutMapping("/me")
     fun updateProfile(
