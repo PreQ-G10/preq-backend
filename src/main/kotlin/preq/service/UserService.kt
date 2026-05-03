@@ -24,15 +24,21 @@ class UserService(
         )
     }
 
-    fun updateProfile(email: String, request: UpdateUserRequest): UserProfileResponse {
+    fun updateProfile(
+        email: String,
+        request: UpdateUserRequest,
+    ): UserProfileResponse {
         val user = userRepository.findByEmail(email).orElseThrow { IllegalArgumentException("User not found") }
         user.name = request.name
         user.lastName = request.lastName
         user.address = request.address
-        user.addressLocation = if (request.latitude != null && request.longitude != null) {
-            GeometryFactory(PrecisionModel(), 4326)
-                .createPoint(Coordinate(request.longitude, request.latitude))
-        } else null
+        user.addressLocation =
+            if (request.latitude != null && request.longitude != null) {
+                GeometryFactory(PrecisionModel(), 4326)
+                    .createPoint(Coordinate(request.longitude, request.latitude))
+            } else {
+                null
+            }
         userRepository.save(user)
         return getProfile(email)
     }
