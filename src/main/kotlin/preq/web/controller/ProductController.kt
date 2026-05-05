@@ -19,7 +19,6 @@ import preq.web.dto.response.ProductResponse
 class ProductController(
     private val productService: ProductService,
 ) {
-
     @GetMapping("/{id}")
     fun getById(
         @PathVariable id: Long,
