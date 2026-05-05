@@ -128,8 +128,7 @@ class ProductService(
         }
     }
 
-    fun getById(id: Long): Product =
-        productRepository.findById(id).orElseThrow { NoSuchElementException("Product not found") }
+    fun getById(id: Long): Product = productRepository.findById(id).orElseThrow { NoSuchElementException("Product not found") }
 
     fun addImage(
         productId: Long,
