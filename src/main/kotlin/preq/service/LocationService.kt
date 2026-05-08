@@ -41,11 +41,13 @@ class LocationService(
     ): LocationDetectionResponse {
         val locationDetected =
             locationRepository.findWithinRange(latitude, longitude, 150.00)
-                ?: throw(NoSuchElementException("No location found with latitude $latitude, longitude $longitude"))
 
-        val locationResponse = LocationResponse.from(locationDetected)
-        val distanceMeters = locationDetected.getDistanceMeters()
-
-        return LocationDetectionResponse.from(locationResponse, distanceMeters)
+        return if (locationDetected != null) {
+            val locationResponse = LocationResponse.from(locationDetected)
+            val distanceMeters = locationDetected.getDistanceMeters()
+            LocationDetectionResponse.found(locationResponse, distanceMeters)
+        } else {
+            LocationDetectionResponse.notFound()
+        }
     }
 }
