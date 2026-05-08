@@ -1,12 +1,12 @@
 plugins {
     kotlin("jvm") version "2.2.0"
-    id("org.springframework.boot") version "3.4.13"
+    id("org.springframework.boot") version "3.5.14"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
 }
 
 extra["tomcat.version"] = "10.1.54"
-extra["netty.version"] = "4.1.132.Final"
+extra["netty.version"] = "4.2.13.Final"
 extra["spring-security.version"] = "6.5.9"
 
 group = "preq"
@@ -47,7 +47,7 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
     testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
 
-    runtimeOnly("org.postgresql:postgresql:42.7.7")
+    runtimeOnly("org.postgresql:postgresql:42.7.11")
 }
 
 tasks.test {
