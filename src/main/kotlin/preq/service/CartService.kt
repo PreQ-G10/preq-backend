@@ -2,13 +2,13 @@ package preq.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import preq.enum.PriceSource
 import preq.repository.LocationProductPriceRepository
 import preq.repository.ProductRepository
 import preq.web.dto.request.CartCompareRequest
 import preq.web.dto.request.CartItemRequest
 import preq.web.dto.response.CartCompareResponse
 import preq.web.dto.response.CartLocationResponse
-import preq.enum.PriceSource
 import preq.web.dto.response.CartProductResponse
 
 @Service
@@ -17,7 +17,6 @@ class CartService(
     private val productRepository: ProductRepository,
     @Value("\${preq.cart.nearby-radius-meters:10000}") private val nearbyRadiusMeters: Double,
 ) {
-
     data class ProductPriceData(
         val productName: String,
         val globalAvg: Double?,
@@ -46,17 +45,18 @@ class CartService(
         return CartCompareResponse(top5, skippedProducts)
     }
 
-    private fun buildProductData(items: List<CartItemRequest>): Map<Long, ProductPriceData> {
-        return items.mapNotNull { item ->
-            val product = productRepository.findById(item.productId).orElse(null)
-            val productName = product?.name ?: "Producto ${item.productId}"
-            val globalAvg = locationProductPriceRepository.getGlobalAvgPrice(item.productId)
-            val byLocation = locationProductPriceRepository
-                .getLocationPricesForProduct(item.productId)
-                .associate { it.getLocationId() to it.getAvgPrice() }
-            item.productId to ProductPriceData(productName, globalAvg, byLocation)
-        }.toMap()
-    }
+    private fun buildProductData(items: List<CartItemRequest>): Map<Long, ProductPriceData> =
+        items
+            .mapNotNull { item ->
+                val product = productRepository.findById(item.productId).orElse(null)
+                val productName = product?.name ?: "Producto ${item.productId}"
+                val globalAvg = locationProductPriceRepository.getGlobalAvgPrice(item.productId)
+                val byLocation =
+                    locationProductPriceRepository
+                        .getLocationPricesForProduct(item.productId)
+                        .associate { it.getLocationId() to it.getAvgPrice() }
+                item.productId to ProductPriceData(productName, globalAvg, byLocation)
+            }.toMap()
 
     private fun buildLocationMeta(productIds: Set<Long>): Map<Long, LocationMeta> {
         val meta = mutableMapOf<Long, LocationMeta>()
@@ -91,7 +91,10 @@ class CartService(
         return active to skipped
     }
 
-    private fun isGloballyDiscarded(data: ProductPriceData, locationMeta: Map<Long, LocationMeta>): Boolean {
+    private fun isGloballyDiscarded(
+        data: ProductPriceData,
+        locationMeta: Map<Long, LocationMeta>,
+    ): Boolean {
         if (data.globalAvg != null) return false
         if (data.byLocation.isNotEmpty()) return false
         return locationMeta.values.none { meta ->
@@ -109,15 +112,17 @@ class CartService(
         activeItems: List<CartItemRequest>,
         productData: Map<Long, ProductPriceData>,
         locationMeta: Map<Long, LocationMeta>,
-    ): List<CartLocationResponse> {
-        return locationMeta.entries.mapNotNull { (locationId, meta) ->
+    ): List<CartLocationResponse> =
+        locationMeta.entries.mapNotNull { (locationId, meta) ->
             val distanceMeters = resolveDistance(request, meta)
-            val productResults = activeItems.map { item ->
-                resolveProductResult(item, productData[item.productId]!!, locationId, meta)
-            }
-            val total = productResults
-                .filter { it.priceSource != PriceSource.NO_DATA }
-                .sumOf { it.totalPrice }
+            val productResults =
+                activeItems.map { item ->
+                    resolveProductResult(item, productData[item.productId]!!, locationId, meta)
+                }
+            val total =
+                productResults
+                    .filter { it.priceSource != PriceSource.NO_DATA }
+                    .sumOf { it.totalPrice }
 
             CartLocationResponse(
                 locationId = locationId,
@@ -128,9 +133,11 @@ class CartService(
                 products = productResults,
             )
         }
-    }
 
-    private fun resolveDistance(request: CartCompareRequest, meta: LocationMeta): Double? {
+    private fun resolveDistance(
+        request: CartCompareRequest,
+        meta: LocationMeta,
+    ): Double? {
         if (request.userLatitude == null || request.userLongitude == null) return null
         if (meta.latitude == null || meta.longitude == null) return null
         return haversineMeters(request.userLatitude, request.userLongitude, meta.latitude, meta.longitude)
@@ -159,12 +166,16 @@ class CartService(
         return buildProductResult(item, data.productName, 0.0, PriceSource.NO_DATA)
     }
 
-    private fun resolveNearbyFallback(data: ProductPriceData, meta: LocationMeta): Double? {
+    private fun resolveNearbyFallback(
+        data: ProductPriceData,
+        meta: LocationMeta,
+    ): Double? {
         if (meta.latitude == null || meta.longitude == null) return null
-        val nearbyPrices = data.byLocation.entries.mapNotNull { (otherLocationId, price) ->
-            if (meta.latitude == null || meta.longitude == null) return@mapNotNull null
-            price
-        }
+        val nearbyPrices =
+            data.byLocation.entries.mapNotNull { (otherLocationId, price) ->
+                if (meta.latitude == null || meta.longitude == null) return@mapNotNull null
+                price
+            }
         return if (nearbyPrices.isNotEmpty()) nearbyPrices.average() else null
     }
 
@@ -173,22 +184,29 @@ class CartService(
         name: String,
         unitPrice: Double,
         source: PriceSource,
-    ): CartProductResponse = CartProductResponse(
-        productId = item.productId,
-        name = name,
-        quantity = item.quantity,
-        unitPrice = unitPrice,
-        totalPrice = unitPrice * item.quantity,
-        priceSource = source,
-    )
+    ): CartProductResponse =
+        CartProductResponse(
+            productId = item.productId,
+            name = name,
+            quantity = item.quantity,
+            unitPrice = unitPrice,
+            totalPrice = unitPrice * item.quantity,
+            priceSource = source,
+        )
 
-    private fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val R = 6371000.0
+    private fun haversineMeters(
+        lat1: Double,
+        lon1: Double,
+        lat2: Double,
+        lon2: Double,
+    ): Double {
+        val earthRadius = 6371000.0
         val dLat = Math.toRadians(lat2 - lat1)
         val dLon = Math.toRadians(lon2 - lon1)
-        val a = Math.pow(Math.sin(dLat / 2), 2.0) +
+        val a =
+            Math.pow(Math.sin(dLat / 2), 2.0) +
                 Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
                 Math.pow(Math.sin(dLon / 2), 2.0)
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     }
 }
