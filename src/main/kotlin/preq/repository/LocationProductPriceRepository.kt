@@ -69,7 +69,9 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
     """,
         nativeQuery = true,
     )
-    fun getGlobalAvgPrice(@Param("productId") productId: Long): Double?
+    fun getGlobalAvgPrice(
+        @Param("productId") productId: Long,
+    ): Double?
 
     fun findByProductIdOrderByReportedAtDesc(productId: Long): List<LocationProductPrice>
 }
