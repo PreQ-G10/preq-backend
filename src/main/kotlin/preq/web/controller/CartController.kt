@@ -22,12 +22,15 @@ class CartController(
         principal: Principal,
     ): CartCompareResponse {
         val user = userRepository.findByEmail(principal.name).orElseThrow()
-        val enrichedRequest = if (request.userLatitude == null && user.addressLocation != null) {
-            request.copy(
-                userLatitude = user.addressLocation!!.y,
-                userLongitude = user.addressLocation!!.x,
-            )
-        } else request
+        val enrichedRequest =
+            if (request.userLatitude == null && user.addressLocation != null) {
+                request.copy(
+                    userLatitude = user.addressLocation!!.y,
+                    userLongitude = user.addressLocation!!.x,
+                )
+            } else {
+                request
+            }
         return cartService.compare(enrichedRequest)
     }
 }
