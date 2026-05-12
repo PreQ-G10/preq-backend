@@ -64,6 +64,38 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
 
     @Query(
         value = """
+        SELECT 
+            l.id as locationId,
+            l.name as name,
+            l.address as address,
+            l.latitude as latitude,
+            l.longitude as longitude,
+            AVG(lpp.price) as avgPrice
+        FROM location_product_price lpp
+        JOIN location l ON l.id = lpp.location_id
+        WHERE lpp.product_id = :productId
+        AND ST_DistanceSphere(
+            ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326),
+            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
+        ) <= :radiusMeters
+        GROUP BY
+            l.id,
+            l.name,
+            l.address,
+            l.latitude,
+            l.longitude
+       """,
+        nativeQuery = true,
+    )
+    fun getLocationPricesForProductInArea(
+        @Param("productId") productId: Long,
+        @Param("latitude") latitude: Double,
+        @Param("longitude") longitude: Double,
+        @Param("radiusMeters") radiusMeters: Double,
+    ): List<LocationPriceResult>
+
+    @Query(
+        value = """
         SELECT AVG(price) FROM location_product_price
         WHERE product_id = :productId
     """,
