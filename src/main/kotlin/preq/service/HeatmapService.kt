@@ -25,6 +25,6 @@ class HeatmapService(
                     latitude = it.getLatitude(),
                     longitude = it.getLongitude(),
                     avgPrice = BigDecimal(it.getAvgPrice()),
-                    )
-        }
+                )
+            }
 }
