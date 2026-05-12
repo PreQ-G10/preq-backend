@@ -16,14 +16,15 @@ class HeatmapService(
         radiusMeters: Double,
     ): List<HeatmapPointResponse> =
         locationProductPriceRepository
-        .getLocationPricesForProductInArea(productId, latitude, longitude, radiusMeters)
-        .map {
-            HeatmapPointResponse(
-                locationId = it.getLocationId(),
-                name = it.getName(),
-                address = it.getAddress(),
-                latitude = it.getLatitude(),
-                longitude = it.getLongitude(),
-                avgPrice = BigDecimal(it.getAvgPrice()),)
+            .getLocationPricesForProductInArea(productId, latitude, longitude, radiusMeters)
+            .map {
+                HeatmapPointResponse(
+                    locationId = it.getLocationId(),
+                    name = it.getName(),
+                    address = it.getAddress(),
+                    latitude = it.getLatitude(),
+                    longitude = it.getLongitude(),
+                    avgPrice = BigDecimal(it.getAvgPrice()),
+                    )
         }
 }
