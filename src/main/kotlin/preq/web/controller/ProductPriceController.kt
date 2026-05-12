@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import preq.service.HeatmapService
 import preq.service.PriceService
-import preq.web.dto.request.HeatMapRequest
 import preq.web.dto.request.ReportProductPriceRequest
 import preq.web.dto.response.HeatmapPointResponse
 import preq.web.dto.response.LocationProductPriceResponse
@@ -38,5 +37,4 @@ class ProductPriceController(
         @RequestParam longitude: Double,
         @RequestParam radius: Double,
     ): List<HeatmapPointResponse> = heatmapService.getHeatmapDataForProduct(productId, latitude, longitude, radius)
-
 }
