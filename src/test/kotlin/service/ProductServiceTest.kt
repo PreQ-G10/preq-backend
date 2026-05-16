@@ -29,28 +29,47 @@ import java.math.BigDecimal
 import java.util.Optional
 
 class ProductServiceTest {
-
     private val productRepository: ProductRepository = mock()
     private val productImageRepository: ProductImageRepository = mock()
     private val imageEmbeddingService: ImageEmbeddingService = mock()
     private val cloudinaryService: CloudinaryService = mock()
     private val openFoodFactsService: OpenFoodFactsService = mock()
-    private val service = ProductService(
-        productRepository, productImageRepository, imageEmbeddingService, cloudinaryService, openFoodFactsService
-    )
+    private val service =
+        ProductService(
+            productRepository,
+            productImageRepository,
+            imageEmbeddingService,
+            cloudinaryService,
+            openFoodFactsService,
+        )
 
     private val mockFile = MockMultipartFile("file", "img.jpg", "image/jpeg", byteArrayOf(1, 2, 3))
-    private fun mockProduct(id: Long = 1L) = Product().apply { this.id = id; name = "Leche"; brand = "La Serenísima"; barcode = "123" }
-    private fun mockApiProduct(name: String = "Leche", brand: String = "La Serenísima", quantity: BigDecimal = BigDecimal.valueOf(1L), unit: String = "L") =
-        OpenFoodFactsProductResponse(
-            product_name = name,
-            brands = brand,
-            product_quantity = quantity,
-            product_quantity_unit = unit,
-            image_front_url = null
-        )
-    private fun mockApiResponse(status: Int = 1, product: OpenFoodFactsProductResponse? = mockApiProduct()) =
-        OpenFoodFactsResponse(status = status, product = product)
+
+    private fun mockProduct(id: Long = 1L) =
+        Product().apply {
+            this.id = id
+            name = "Leche"
+            brand = "La Serenísima"
+            barcode = "123"
+        }
+
+    private fun mockApiProduct(
+        name: String = "Leche",
+        brand: String = "La Serenísima",
+        quantity: BigDecimal = BigDecimal.valueOf(1L),
+        unit: String = "L",
+    ) = OpenFoodFactsProductResponse(
+        product_name = name,
+        brands = brand,
+        product_quantity = quantity,
+        product_quantity_unit = unit,
+        image_front_url = null,
+    )
+
+    private fun mockApiResponse(
+        status: Int = 1,
+        product: OpenFoodFactsProductResponse? = mockApiProduct(),
+    ) = OpenFoodFactsResponse(status = status, product = product)
 
     // ─── getOrCreateByBarcode ─────────────────────────────────────────────────────
 
@@ -209,10 +228,11 @@ class ProductServiceTest {
     @Test
     fun `detect returns mapped results above threshold`() {
         val product = mockProduct()
-        val similarResult = mock<SimilarProductResult>().also {
-            whenever(it.getProductId()).thenReturn(1L)
-            whenever(it.getSimilarity()).thenReturn(0.95)
-        }
+        val similarResult =
+            mock<SimilarProductResult>().also {
+                whenever(it.getProductId()).thenReturn(1L)
+                whenever(it.getSimilarity()).thenReturn(0.95)
+            }
         whenever(imageEmbeddingService.generateEmbedding(mockFile)).thenReturn(floatArrayOf(0.1f, 0.2f))
         whenever(productImageRepository.findSimilarProducts(any(), any())).thenReturn(listOf(similarResult))
         whenever(productRepository.findAllById(listOf(1L))).thenReturn(listOf(product))

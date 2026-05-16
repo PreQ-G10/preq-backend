@@ -27,18 +27,21 @@ import java.time.LocalDateTime
 import java.util.Optional
 import kotlin.test.Test
 
-
 class PriceServiceTest {
-
     private val priceRepo: LocationProductPriceRepository = mock()
     private val productRepo: ProductRepository = mock()
     private val locationRepo: LocationRepository = mock()
     private val service = PriceService(priceRepo, productRepo, locationRepo)
 
     private fun mockProduct(id: Long) = Product().apply { this.id = id }
+
     private fun mockLocation(id: Long) = Location().apply { this.id = id }
 
-    private fun mockStats(avg: Double? = 10.0, max: Double? = 15.0, min: Double? = 5.0): PriceStats {
+    private fun mockStats(
+        avg: Double? = 10.0,
+        max: Double? = 15.0,
+        min: Double? = 5.0,
+    ): PriceStats {
         val m = mock<PriceStats>()
         whenever(m.getAvgPrice()).thenReturn(avg)
         whenever(m.getMaxPrice()).thenReturn(max)
@@ -46,7 +49,12 @@ class PriceServiceTest {
         return m
     }
 
-    private fun mockTopLocation(name: String = "Supermercado Norte", address: String = "Av. Corrientes 1234", avg: Double = 9.5, count: Int = 3): TopLocationResult {
+    private fun mockTopLocation(
+        name: String = "Supermercado Norte",
+        address: String = "Av. Corrientes 1234",
+        avg: Double = 9.5,
+        count: Int = 3,
+    ): TopLocationResult {
         val m = mock<TopLocationResult>()
         whenever(m.getName()).thenReturn(name)
         whenever(m.getAddress()).thenReturn(address)
@@ -55,12 +63,20 @@ class PriceServiceTest {
         return m
     }
 
-    private fun priceEntry(price: BigDecimal, daysAgo: Long = 0) = LocationProductPrice().apply {
+    private fun priceEntry(
+        price: BigDecimal,
+        daysAgo: Long = 0,
+    ) = LocationProductPrice().apply {
         this.price = price
         this.reportedAt = LocalDateTime.now().minusDays(daysAgo)
     }
 
-    private fun stubSummaryDeps(productId: Long, stats: PriceStats, prices: List<LocationProductPrice>, topLocations: List<TopLocationResult> = emptyList()) {
+    private fun stubSummaryDeps(
+        productId: Long,
+        stats: PriceStats,
+        prices: List<LocationProductPrice>,
+        topLocations: List<TopLocationResult> = emptyList(),
+    ) {
         whenever(productRepo.findById(productId)).thenReturn(Optional.of(mockProduct(productId)))
         whenever(priceRepo.getPriceStats(productId)).thenReturn(stats)
         whenever(priceRepo.getTopLocations(productId)).thenReturn(topLocations)
@@ -191,10 +207,14 @@ class PriceServiceTest {
     @Test
     fun `weightedPrice favors recent reports over old ones`() {
         val stats = mockStats()
-        stubSummaryDeps(1L, stats, listOf(
-            priceEntry(BigDecimal("100.00"), daysAgo = 0),
-            priceEntry(BigDecimal("10.00"), daysAgo = 300),
-        ))
+        stubSummaryDeps(
+            1L,
+            stats,
+            listOf(
+                priceEntry(BigDecimal("100.00"), daysAgo = 0),
+                priceEntry(BigDecimal("10.00"), daysAgo = 300),
+            ),
+        )
 
         val result = service.getPriceSummary(1L)
 
@@ -215,10 +235,14 @@ class PriceServiceTest {
     @Test
     fun `weightedPrice with same-age entries equals arithmetic mean`() {
         val stats = mockStats()
-        stubSummaryDeps(1L, stats, listOf(
-            priceEntry(BigDecimal("20.00"), daysAgo = 5),
-            priceEntry(BigDecimal("40.00"), daysAgo = 5),
-        ))
+        stubSummaryDeps(
+            1L,
+            stats,
+            listOf(
+                priceEntry(BigDecimal("20.00"), daysAgo = 5),
+                priceEntry(BigDecimal("40.00"), daysAgo = 5),
+            ),
+        )
 
         val result = service.getPriceSummary(1L)
 

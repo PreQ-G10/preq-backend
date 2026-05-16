@@ -20,12 +20,14 @@ class PriceService(
         val productId = reportProductPriceRequest.productId
         val locationId = reportProductPriceRequest.locationId
         val price = reportProductPriceRequest.price
-        val product = productRepository.findById(productId).orElseThrow {
-            NoSuchElementException("Product $productId not found")
-        }
-        val location = locationRepository.findById(locationId).orElseThrow {
-            NoSuchElementException("Location $locationId not found")
-        }
+        val product =
+            productRepository.findById(productId).orElseThrow {
+                NoSuchElementException("Product $productId not found")
+            }
+        val location =
+            locationRepository.findById(locationId).orElseThrow {
+                NoSuchElementException("Location $locationId not found")
+            }
         return locationProductPriceRepository.save(
             LocationProductPrice().apply {
                 this.product = product

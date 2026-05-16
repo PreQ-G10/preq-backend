@@ -19,15 +19,26 @@ import preq.web.dto.request.CartItemRequest
 import java.util.Optional
 
 class CartServiceTest {
-
     private val locationProductPriceRepository: LocationProductPriceRepository = mock()
     private val productRepository: ProductRepository = mock()
     private val service = CartService(locationProductPriceRepository, productRepository, nearbyRadiusMeters = 10000.0)
 
-    private fun mockProduct(id: Long, name: String = "Producto $id") =
-        Product().apply { this.id = id; this.name = name }
+    private fun mockProduct(
+        id: Long,
+        name: String = "Producto $id",
+    ) = Product().apply {
+        this.id = id
+        this.name = name
+    }
 
-    private fun mockLocationPrice(locationId: Long, avgPrice: Double, name: String = "Supermercado $locationId", address: String = "Calle $locationId", lat: Double = -34.6, lon: Double = -58.3): LocationPriceResult {
+    private fun mockLocationPrice(
+        locationId: Long,
+        avgPrice: Double,
+        name: String = "Supermercado $locationId",
+        address: String = "Calle $locationId",
+        lat: Double = -34.6,
+        lon: Double = -58.3,
+    ): LocationPriceResult {
         val m = mock<LocationPriceResult>()
         whenever(m.getLocationId()).thenReturn(locationId)
         whenever(m.getAvgPrice()).thenReturn(avgPrice)
@@ -48,11 +59,18 @@ class CartServiceTest {
         userLongitude = userLon,
     )
 
-    private fun stubProduct(id: Long, name: String = "Producto $id") {
+    private fun stubProduct(
+        id: Long,
+        name: String = "Producto $id",
+    ) {
         whenever(productRepository.findById(id)).thenReturn(Optional.of(mockProduct(id, name)))
     }
 
-    private fun stubPrices(productId: Long, globalAvg: Double?, vararg locationPrices: LocationPriceResult) {
+    private fun stubPrices(
+        productId: Long,
+        globalAvg: Double?,
+        vararg locationPrices: LocationPriceResult,
+    ) {
         whenever(locationProductPriceRepository.getGlobalAvgPrice(productId)).thenReturn(globalAvg)
         whenever(locationProductPriceRepository.getLocationPricesForProduct(productId)).thenReturn(locationPrices.toList())
     }
@@ -94,7 +112,11 @@ class CartServiceTest {
 
         val result = service.compare(cartRequest(1L to 2))
 
-        val product = result.locations.first().products.first()
+        val product =
+            result.locations
+                .first()
+                .products
+                .first()
         assertEquals(PriceSource.REPORTED, product.priceSource)
         assertEquals(3.50, product.unitPrice)
         assertEquals(7.0, product.totalPrice)
@@ -108,7 +130,11 @@ class CartServiceTest {
 
         val result = service.compare(cartRequest(1L to 4))
 
-        val product = result.locations.first().products.first()
+        val product =
+            result.locations
+                .first()
+                .products
+                .first()
         assertEquals(8.0, product.totalPrice)
     }
 

@@ -2,7 +2,10 @@ package model
 
 import jakarta.validation.Validation
 import jakarta.validation.Validator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import preq.enum.ProductImageStatus
@@ -11,7 +14,6 @@ import preq.model.ProductImage
 import java.math.BigDecimal
 
 class ProductImageTest {
-
     private lateinit var validator: Validator
 
     @BeforeEach
@@ -19,19 +21,21 @@ class ProductImageTest {
         validator = Validation.buildDefaultValidatorFactory().validator
     }
 
-    private fun validProduct() = Product().apply {
-        name = "Pasta de Maní"
-        brand = "Maní King"
-        quantity = BigDecimal("485.00")
-        quantityType = "g"
-    }
+    private fun validProduct() =
+        Product().apply {
+            name = "Pasta de Maní"
+            brand = "Maní King"
+            quantity = BigDecimal("485.00")
+            quantityType = "g"
+        }
 
-    private fun validProductImage() = ProductImage().apply {
-        product = validProduct()
-        imageUrl = "https://res.cloudinary.com/dkk1fjp1x/image/upload/v1/photo.jpg"
-        confidenceScore = 0.92
-        status = ProductImageStatus.PENDING_REVIEW
-    }
+    private fun validProductImage() =
+        ProductImage().apply {
+            product = validProduct()
+            imageUrl = "https://res.cloudinary.com/dkk1fjp1x/image/upload/v1/photo.jpg"
+            confidenceScore = 0.92
+            status = ProductImageStatus.PENDING_REVIEW
+        }
 
     // ── valid ─────────────────────────────────────────────────────────────
 
@@ -82,18 +86,20 @@ class ProductImageTest {
 
     @Test
     fun `imageUrl with valid cloudinary url passes validation`() {
-        val image = validProductImage().apply {
-            imageUrl = "https://res.cloudinary.com/dkk1fjp1x/image/upload/v1776252009/photo.jpg"
-        }
+        val image =
+            validProductImage().apply {
+                imageUrl = "https://res.cloudinary.com/dkk1fjp1x/image/upload/v1776252009/photo.jpg"
+            }
         val violations = validator.validate(image)
         assertTrue(violations.none { it.propertyPath.toString() == "imageUrl" })
     }
 
     @Test
     fun `imageUrl with arbitrary path after cloudinary domain passes validation`() {
-        val image = validProductImage().apply {
-            imageUrl = "https://res.cloudinary.com/anything/goes/here.png"
-        }
+        val image =
+            validProductImage().apply {
+                imageUrl = "https://res.cloudinary.com/anything/goes/here.png"
+            }
         val violations = validator.validate(image)
         assertTrue(violations.none { it.propertyPath.toString() == "imageUrl" })
     }
@@ -194,7 +200,14 @@ class ProductImageTest {
         val result = image.embeddingAsString()
         assertTrue(result.startsWith("["))
         assertTrue(result.endsWith("]"))
-        assertEquals(1000, result.removePrefix("[").removeSuffix("]").split(",").size)
+        assertEquals(
+            1000,
+            result
+                .removePrefix("[")
+                .removeSuffix("]")
+                .split(",")
+                .size,
+        )
     }
 
     // ── defaults ──────────────────────────────────────────────────────────

@@ -20,7 +20,6 @@ import preq.web.dto.request.CreateLocationRequest
 import kotlin.test.assertNotEquals
 
 class LocationServiceTest {
-
     private val locationRepository: LocationRepository = mock()
     private val service = LocationService(locationRepository)
 
