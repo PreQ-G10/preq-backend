@@ -20,7 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class UserServiceTest {
-
     private val userRepository: UserRepository = mock()
     private val service = UserService(userRepository)
 
@@ -36,9 +35,12 @@ class UserServiceTest {
         this.lastName = lastName
         this.email = email
         this.address = address
-        this.addressLocation = if (latitude != null && longitude != null)
-            GeometryFactory(PrecisionModel(), 4326).createPoint(Coordinate(longitude, latitude))
-        else null
+        this.addressLocation =
+            if (latitude != null && longitude != null) {
+                GeometryFactory(PrecisionModel(), 4326).createPoint(Coordinate(longitude, latitude))
+            } else {
+                null
+            }
     }
 
     private fun updateRequest(
@@ -52,7 +54,7 @@ class UserServiceTest {
         lastName = lastName,
         address = address,
         latitude = latitude,
-        longitude = longitude
+        longitude = longitude,
     )
 
     // ─── getProfile ───────────────────────────────────────────────────────────────
@@ -96,7 +98,11 @@ class UserServiceTest {
         whenever(userRepository.findByEmail("juan@email.com")).thenReturn(Optional.of(user))
         whenever(userRepository.save(any())).thenReturn(user)
 
-        val result = service.updateProfile("juan@email.com", updateRequest(name = "Carlos", lastName = "García", address = "Av. Santa Fe 800"))
+        val result =
+            service.updateProfile(
+                "juan@email.com",
+                updateRequest(name = "Carlos", lastName = "García", address = "Av. Santa Fe 800"),
+            )
 
         assertEquals("Carlos", result.name)
         assertEquals("García", result.lastName)

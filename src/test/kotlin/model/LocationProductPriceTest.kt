@@ -2,7 +2,8 @@ package model
 
 import jakarta.validation.Validation
 import jakarta.validation.Validator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import preq.model.Location
@@ -12,7 +13,6 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class LocationProductPriceTest {
-
     private lateinit var validator: Validator
 
     @BeforeEach
@@ -20,26 +20,29 @@ class LocationProductPriceTest {
         validator = Validation.buildDefaultValidatorFactory().validator
     }
 
-    private fun validProduct() = Product().apply {
-        name = "Pasta de Maní"
-        brand = "Maní King"
-        quantity = BigDecimal("485.00")
-        quantityType = "g"
-    }
+    private fun validProduct() =
+        Product().apply {
+            name = "Pasta de Maní"
+            brand = "Maní King"
+            quantity = BigDecimal("485.00")
+            quantityType = "g"
+        }
 
-    private fun validLocation() = Location().apply {
-        name = "Supermercado Día"
-        address = "Av. Corrientes 1234, Buenos Aires"
-        latitude = -34.6037
-        longitude = -58.3816
-    }
+    private fun validLocation() =
+        Location().apply {
+            name = "Supermercado Día"
+            address = "Av. Corrientes 1234, Buenos Aires"
+            latitude = -34.6037
+            longitude = -58.3816
+        }
 
-    private fun validPrice() = LocationProductPrice().apply {
-        product = validProduct()
-        location = validLocation()
-        price = BigDecimal("1500.00")
-        reportedAt = LocalDateTime.now()
-    }
+    private fun validPrice() =
+        LocationProductPrice().apply {
+            product = validProduct()
+            location = validLocation()
+            price = BigDecimal("1500.00")
+            reportedAt = LocalDateTime.now()
+        }
 
     // ── valid ─────────────────────────────────────────────────────────────
 

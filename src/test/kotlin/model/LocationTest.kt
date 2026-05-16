@@ -2,7 +2,9 @@ package model
 
 import jakarta.validation.Validation
 import jakarta.validation.Validator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import preq.enum.LocationType
@@ -10,7 +12,6 @@ import preq.model.Location
 import preq.model.LocationProductPrice
 
 class LocationTest {
-
     private lateinit var validator: Validator
 
     @BeforeEach
@@ -18,13 +19,14 @@ class LocationTest {
         validator = Validation.buildDefaultValidatorFactory().validator
     }
 
-    private fun validLocation() = Location().apply {
-        name = "Supermercado Día"
-        address = "Av. Corrientes 1234, Buenos Aires"
-        type = LocationType.SUPERMARKET
-        latitude = -34.6037
-        longitude = -58.3816
-    }
+    private fun validLocation() =
+        Location().apply {
+            name = "Supermercado Día"
+            address = "Av. Corrientes 1234, Buenos Aires"
+            type = LocationType.SUPERMARKET
+            latitude = -34.6037
+            longitude = -58.3816
+        }
 
     // ── valid ─────────────────────────────────────────────────────────────
 
@@ -36,20 +38,22 @@ class LocationTest {
 
     @Test
     fun `valid location with no coordinates passes validation`() {
-        val location = validLocation().apply {
-            latitude = null
-            longitude = null
-        }
+        val location =
+            validLocation().apply {
+                latitude = null
+                longitude = null
+            }
         val violations = validator.validate(location)
         assertTrue(violations.isEmpty())
     }
 
     @Test
     fun `type defaults to OTHER`() {
-        val location = Location().apply {
-            name = "Supermercado Día"
-            address = "Av. Corrientes 1234, Buenos Aires"
-        }
+        val location =
+            Location().apply {
+                name = "Supermercado Día"
+                address = "Av. Corrientes 1234, Buenos Aires"
+            }
         assertEquals(LocationType.OTHER, location.type)
     }
 
@@ -166,10 +170,11 @@ class LocationTest {
 
     @Test
     fun `hasCoordinates returns false when both are null`() {
-        val location = validLocation().apply {
-            latitude = null
-            longitude = null
-        }
+        val location =
+            validLocation().apply {
+                latitude = null
+                longitude = null
+            }
         assertFalse(location.hasCoordinates())
     }
 
