@@ -111,15 +111,15 @@ class ImageEmbeddingService {
     }
 
     private fun removeBackground(image: Image): Image {
-        val buf = image.wrappedImage as BufferedImage
-        val ow = buf.width
-        val oh = buf.height
+        val originalImage = image.wrappedImage as BufferedImage
+        val originalWidth = originalImage.width
+        val originalHeight = originalImage.height
 
         val size = 320
         val resized = BufferedImage(size, size, BufferedImage.TYPE_INT_RGB)
-        val g = resized.createGraphics()
-        g.drawImage(buf, 0, 0, size, size, null)
-        g.dispose()
+        val graphics = resized.createGraphics()
+        graphics.drawImage(originalImage, 0, 0, size, size, null)
+        graphics.dispose()
 
         val mean = floatArrayOf(0.485f, 0.456f, 0.406f)
         val std = floatArrayOf(0.229f, 0.224f, 0.225f)
@@ -128,12 +128,12 @@ class ImageEmbeddingService {
         for (y in 0 until size) {
             for (x in 0 until size) {
                 val rgb = resized.getRGB(x, y)
-                val r = ((rgb shr 16) and 0xFF) / 255f
-                val gr = ((rgb shr 8) and 0xFF) / 255f
-                val b = ((rgb) and 0xFF) / 255f
-                inputData[0 * size * size + y * size + x] = (r - mean[0]) / std[0]
-                inputData[1 * size * size + y * size + x] = (gr - mean[1]) / std[1]
-                inputData[2 * size * size + y * size + x] = (b - mean[2]) / std[2]
+                val red = ((rgb shr 16) and 0xFF) / 255f
+                val green = ((rgb shr 8) and 0xFF) / 255f
+                val blue = ((rgb) and 0xFF) / 255f
+                inputData[0 + y * size + x] = (red - mean[0]) / std[0]
+                inputData[1 * size * size + y * size + x] = (green - mean[1]) / std[1]
+                inputData[2 * size * size + y * size + x] = (blue - mean[2]) / std[2]
             }
         }
 
@@ -149,44 +149,44 @@ class ImageEmbeddingService {
         var minVal = Float.MAX_VALUE
         var maxVal = -Float.MAX_VALUE
         for (row in outputData) {
-            for (v in row) {
-                if (v < minVal) minVal = v
-                if (v > maxVal) maxVal = v
+            for (maskValue in row) {
+                if (maskValue < minVal) minVal = maskValue
+                if (maskValue > maxVal) maxVal = maskValue
             }
         }
         val range = maxVal - minVal
 
-        val output = BufferedImage(ow, oh, BufferedImage.TYPE_INT_ARGB)
-        for (y in 0 until oh) {
-            for (x in 0 until ow) {
-                val mx = (x.toFloat() / ow * size).toInt().coerceIn(0, size - 1)
-                val my = (y.toFloat() / oh * size).toInt().coerceIn(0, size - 1)
-                val maskVal = (outputData[my][mx] - minVal) / range
+        val output = BufferedImage(originalWidth, originalHeight, BufferedImage.TYPE_INT_ARGB)
+        for (y in 0 until originalHeight) {
+            for (x in 0 until originalWidth) {
+                val maskX = (x.toFloat() / originalWidth * size).toInt().coerceIn(0, size - 1)
+                val maskY = (y.toFloat() / originalHeight * size).toInt().coerceIn(0, size - 1)
+                val maskVal = (outputData[maskY][maskX] - minVal) / range
                 if (maskVal > 0.5f) {
-                    output.setRGB(x, y, buf.getRGB(x, y))
+                    output.setRGB(x, y, originalImage.getRGB(x, y))
                 } else {
                     output.setRGB(x, y, 0xFFFFFFFF.toInt())
                 }
             }
         }
 
-        val xs =
-            (0 until ow).filter { x ->
-                (0 until oh).any { y -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
+        val nonWhiteColumns =
+            (0 until originalWidth).filter { x ->
+                (0 until originalHeight).any { y -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
             }
-        val ys =
-            (0 until oh).filter { y ->
-                (0 until ow).any { x -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
+        val nonWhiteRows =
+            (0 until originalHeight).filter { y ->
+                (0 until originalWidth).any { x -> output.getRGB(x, y) != 0xFFFFFFFF.toInt() }
             }
 
-        if (xs.isEmpty() || ys.isEmpty()) return image
+        if (nonWhiteColumns.isEmpty() || nonWhiteRows.isEmpty()) return image
 
         val cropped =
             output.getSubimage(
-                xs.first(),
-                ys.first(),
-                xs.last() - xs.first() + 1,
-                ys.last() - ys.first() + 1,
+                nonWhiteColumns.first(),
+                nonWhiteRows.first(),
+                nonWhiteColumns.last() - nonWhiteColumns.first() + 1,
+                nonWhiteRows.last() - nonWhiteRows.first() + 1,
             )
         return ImageFactory.getInstance().fromImage(cropped)
     }
@@ -195,12 +195,12 @@ class ImageEmbeddingService {
         require(file.contentType?.startsWith("image/") == true) {
             "File must be an image, got: ${file.contentType}"
         }
-        val image =
+        val originalImage =
             ByteArrayInputStream(file.bytes).use {
                 ImageFactory.getInstance().fromInputStream(it)
             }
-        val segmented = removeBackground(image)
-        return embeddingPredictor.predict(segmented)
+        val backgroundRemovedImage = removeBackground(originalImage)
+        return embeddingPredictor.predict(backgroundRemovedImage)
     }
 
     @PreDestroy

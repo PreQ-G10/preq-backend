@@ -8,6 +8,11 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 import org.hibernate.annotations.Type
 import preq.config.FloatArrayVectorType
 import preq.enum.ProductImageStatus
@@ -17,8 +22,11 @@ import preq.enum.ProductImageStatus
 class ProductImage : BaseEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
+    @NotNull
     var product: Product? = null
 
+    @NotBlank
+    @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*", message = "Image URL must be a valid Cloudinary URL")
     var imageUrl: String = ""
 
     @Column(columnDefinition = "vector(1000)")
@@ -28,6 +36,8 @@ class ProductImage : BaseEntity() {
     @Enumerated(EnumType.STRING)
     var status: ProductImageStatus = ProductImageStatus.PENDING_REVIEW
 
+    @DecimalMin(value = "0.0", message = "Confidence score must be >= 0.0")
+    @DecimalMax(value = "1.0", message = "Confidence score must be <= 1.0")
     var confidenceScore: Double = 0.0
 
     fun isApproved() = status == ProductImageStatus.APPROVED
