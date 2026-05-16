@@ -10,6 +10,11 @@ import preq.web.dto.request.CartItemRequest
 import preq.web.dto.response.CartCompareResponse
 import preq.web.dto.response.CartLocationResponse
 import preq.web.dto.response.CartProductResponse
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 @Service
 class CartService(
@@ -40,9 +45,9 @@ class CartService(
         if (activeItems.isEmpty()) return CartCompareResponse(emptyList(), skippedProducts)
 
         val locationResults = buildLocationResults(request, activeItems, productData, locationMeta)
-        val top5 = locationResults.sortedBy { it.totalEstimatedPrice }.take(5)
+        val top5Cheapest = locationResults.sortedBy { it.totalEstimatedPrice }.take(5)
 
-        return CartCompareResponse(top5, skippedProducts)
+        return CartCompareResponse(top5Cheapest, skippedProducts)
     }
 
     private fun buildProductData(items: List<CartItemRequest>): Map<Long, ProductPriceData> =
@@ -59,16 +64,16 @@ class CartService(
             }.toMap()
 
     private fun buildLocationMeta(productIds: Set<Long>): Map<Long, LocationMeta> {
-        val meta = mutableMapOf<Long, LocationMeta>()
+        val locationMetaById = mutableMapOf<Long, LocationMeta>()
         productIds.forEach { productId ->
             locationProductPriceRepository.getLocationPricesForProduct(productId).forEach {
-                meta.putIfAbsent(
+                locationMetaById.putIfAbsent(
                     it.getLocationId(),
                     LocationMeta(it.getName(), it.getAddress(), it.getLatitude(), it.getLongitude()),
                 )
             }
         }
-        return meta
+        return locationMetaById
     }
 
     private fun partitionItems(
@@ -119,7 +124,7 @@ class CartService(
                 activeItems.map { item ->
                     resolveProductResult(item, productData[item.productId]!!, locationId, meta)
                 }
-            val total =
+            val estimatedTotal =
                 productResults
                     .filter { it.priceSource != PriceSource.NO_DATA }
                     .sumOf { it.totalPrice }
@@ -128,7 +133,7 @@ class CartService(
                 locationId = locationId,
                 name = meta.name,
                 address = meta.address,
-                totalEstimatedPrice = total,
+                totalEstimatedPrice = estimatedTotal,
                 distanceMeters = distanceMeters,
                 products = productResults,
             )
@@ -181,17 +186,17 @@ class CartService(
 
     private fun buildProductResult(
         item: CartItemRequest,
-        name: String,
+        productName: String,
         unitPrice: Double,
-        source: PriceSource,
+        priceSource: PriceSource,
     ): CartProductResponse =
         CartProductResponse(
             productId = item.productId,
-            name = name,
+            name = productName,
             quantity = item.quantity,
             unitPrice = unitPrice,
             totalPrice = unitPrice * item.quantity,
-            priceSource = source,
+            priceSource = priceSource,
         )
 
     private fun haversineMeters(
@@ -204,9 +209,9 @@ class CartService(
         val dLat = Math.toRadians(lat2 - lat1)
         val dLon = Math.toRadians(lon2 - lon1)
         val a =
-            Math.pow(Math.sin(dLat / 2), 2.0) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                Math.pow(Math.sin(dLon / 2), 2.0)
-        return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+            sin(dLat / 2).pow(2.0) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                    sin(dLon / 2).pow(2.0)
+        return earthRadius * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
 }

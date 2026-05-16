@@ -20,8 +20,12 @@ class PriceService(
         val productId = reportProductPriceRequest.productId
         val locationId = reportProductPriceRequest.locationId
         val price = reportProductPriceRequest.price
-        val product = productRepository.findById(productId).orElseThrow()
-        val location = locationRepository.findById(locationId).orElseThrow()
+        val product = productRepository.findById(productId).orElseThrow {
+            NoSuchElementException("Product $productId not found")
+        }
+        val location = locationRepository.findById(locationId).orElseThrow {
+            NoSuchElementException("Location $locationId not found")
+        }
         return locationProductPriceRepository.save(
             LocationProductPrice().apply {
                 this.product = product
@@ -33,11 +37,13 @@ class PriceService(
     }
 
     fun getPriceSummary(productId: Long): PriceSummaryResponse {
+        productRepository.findById(productId).orElseThrow {
+            NoSuchElementException("Product $productId not found")
+        }
         val stats = locationProductPriceRepository.getPriceStats(productId)
         val topLocations = locationProductPriceRepository.getTopLocations(productId)
         val allPrices = locationProductPriceRepository.findByProductIdOrderByReportedAtDesc(productId)
         val weightedPrice = computeWeightedPrice(allPrices)
-
         return PriceSummaryResponse.from(stats, topLocations, weightedPrice)
     }
 

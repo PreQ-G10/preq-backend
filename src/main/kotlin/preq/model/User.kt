@@ -5,7 +5,12 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
+import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 import org.locationtech.jts.geom.Point
 import preq.enum.UserRole
 
@@ -13,10 +18,12 @@ import preq.enum.UserRole
 @Table(name = "users")
 class User : BaseEntity() {
     @NotBlank
+    @Pattern(regexp = "^[^0-9]{1,50}$", message = "Name must not contain numbers and be at most 50 characters")
     @Column(nullable = false)
     lateinit var name: String
 
     @NotBlank
+    @Pattern(regexp = "^[^0-9]{1,50}$", message = "Last name must not contain numbers and be at most 50 characters")
     @Column(name = "last_name", nullable = false)
     lateinit var lastName: String
 
@@ -27,13 +34,17 @@ class User : BaseEntity() {
     var addressLocation: Point? = null
 
     @NotBlank
+    @Email(message = "Email must be valid")
     @Column(nullable = false, unique = true)
     lateinit var email: String
 
     @NotBlank
+    @Size(min = 5, message = "Password must be at least 5 characters")
     @Column(nullable = false)
     lateinit var password: String
 
+    @DecimalMin(value = "0.0", message = "Trust score must be >= 0.0")
+    @DecimalMax(value = "1.0", message = "Trust score must be <= 1.0")
     @Column(name = "trust_score", nullable = false)
     var trustScore: Double = 0.5
 
