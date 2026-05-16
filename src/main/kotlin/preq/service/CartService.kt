@@ -211,7 +211,7 @@ class CartService(
         val a =
             sin(dLat / 2).pow(2.0) +
                 cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
-                    sin(dLon / 2).pow(2.0)
+                sin(dLon / 2).pow(2.0)
         return earthRadius * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
 }

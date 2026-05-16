@@ -2,14 +2,15 @@ package model
 
 import jakarta.validation.Validation
 import jakarta.validation.Validator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import preq.enum.UserRole
 import preq.model.User
 
 class UserTest {
-
     private lateinit var validator: Validator
 
     @BeforeEach
@@ -17,14 +18,15 @@ class UserTest {
         validator = Validation.buildDefaultValidatorFactory().validator
     }
 
-    private fun validUser() = User().apply {
-        name = "Franco"
-        lastName = "Marengo"
-        email = "franco@preq.com"
-        password = "securepassword"
-        trustScore = 0.5
-        role = UserRole.USER
-    }
+    private fun validUser() =
+        User().apply {
+            name = "Franco"
+            lastName = "Marengo"
+            email = "franco@preq.com"
+            password = "securepassword"
+            trustScore = 0.5
+            role = UserRole.USER
+        }
 
     // ── valid ─────────────────────────────────────────────────────────────
 
@@ -193,12 +195,13 @@ class UserTest {
 
     @Test
     fun `trustScore defaults to 0_5`() {
-        val user = User().apply {
-            name = "Franco"
-            lastName = "Marengo"
-            email = "franco@preq.com"
-            password = "securepassword"
-        }
+        val user =
+            User().apply {
+                name = "Franco"
+                lastName = "Marengo"
+                email = "franco@preq.com"
+                password = "securepassword"
+            }
         assertEquals(0.5, user.trustScore)
     }
 
@@ -234,12 +237,13 @@ class UserTest {
 
     @Test
     fun `role defaults to USER`() {
-        val user = User().apply {
-            name = "Franco"
-            lastName = "Marengo"
-            email = "franco@preq.com"
-            password = "securepassword"
-        }
+        val user =
+            User().apply {
+                name = "Franco"
+                lastName = "Marengo"
+                email = "franco@preq.com"
+                password = "securepassword"
+            }
         assertEquals(UserRole.USER, user.role)
     }
 
@@ -247,23 +251,25 @@ class UserTest {
 
     @Test
     fun `address is null by default`() {
-        val user = User().apply {
-            name = "Franco"
-            lastName = "Marengo"
-            email = "franco@preq.com"
-            password = "securepassword"
-        }
+        val user =
+            User().apply {
+                name = "Franco"
+                lastName = "Marengo"
+                email = "franco@preq.com"
+                password = "securepassword"
+            }
         assertNull(user.address)
     }
 
     @Test
     fun `addressLocation is null by default`() {
-        val user = User().apply {
-            name = "Franco"
-            lastName = "Marengo"
-            email = "franco@preq.com"
-            password = "securepassword"
-        }
+        val user =
+            User().apply {
+                name = "Franco"
+                lastName = "Marengo"
+                email = "franco@preq.com"
+                password = "securepassword"
+            }
         assertNull(user.addressLocation)
     }
 }
