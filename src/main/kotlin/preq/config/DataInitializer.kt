@@ -5,14 +5,18 @@ import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import preq.enum.LocationType
+import preq.enum.PriceValidity
 import preq.model.Location
 import preq.model.LocationProductPrice
 import preq.model.Product
+import preq.model.User
 import preq.repository.LocationProductPriceRepository
 import preq.repository.LocationRepository
 import preq.repository.ProductRepository
+import preq.repository.UserRepository
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -22,12 +26,50 @@ class DataInitializer(
     private val productRepository: ProductRepository,
     private val locationRepository: LocationRepository,
     private val locationProductPriceRepository: LocationProductPriceRepository,
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder,
 ) : ApplicationRunner {
     private val rng = Random(42)
     private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
 
+    private val seedNames = listOf(
+        "Mateo", "Valentina", "Santiago", "Sofía", "Nicolás",
+        "Martina", "Tomás", "Lucía", "Benjamín", "Emma",
+        "Lucas", "Camila", "Facundo", "Florencia", "Ignacio",
+        "Agustina", "Joaquín", "Rocío", "Sebastián", "Pilar",
+        "Marcos", "Julieta", "Andrés", "Valeria", "Bruno",
+        "Milagros", "Ezequiel", "Natalia", "Ramiro", "Clara"
+    )
+
+    private val seedLastNames = listOf(
+        "García", "Martínez", "López", "González", "Rodríguez",
+        "Fernández", "Pérez", "Sánchez", "Romero", "Torres",
+        "Díaz", "Álvarez", "Ruiz", "Moreno", "Muñoz",
+        "Alonso", "Gutiérrez", "Navarro", "Molina", "Domínguez",
+        "Gil", "Vázquez", "Serrano", "Blanco", "Ramírez",
+        "Herrera", "Medina", "Suárez", "Castro", "Ortega"
+    )
+
     // ─────────────────────────────────────────────────────────
-    // Reference prices — used to generate realistic price reports
+    // User tiers
+    // ─────────────────────────────────────────────────────────
+
+    enum class UserTier(
+        val trustScore: Double,
+        val recoveryMultiplier: Double,
+        val acceptedRatio: Double,   // probability of ACCEPTED report
+        val avgConfidence: Double,   // base confidence score
+    ) {
+        HIGH(0.85, 1.0, 0.95, 0.95),
+        GOOD(0.65, 1.0, 0.85, 0.85),
+        MID(0.45, 1.0, 0.65, 0.70),
+        BORDERLINE(0.30, 0.75, 0.45, 0.55),
+        LOW(0.15, 0.5, 0.20, 0.35),
+        BAD(0.05, 0.25, 0.05, 0.20),
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Reference prices
     // ─────────────────────────────────────────────────────────
 
     data class ProductReference(
@@ -122,11 +164,12 @@ class DataInitializer(
     // ─────────────────────────────────────────────────────────
 
     override fun run(args: ApplicationArguments) {
-        println("DataInitializer: Seeding locations and prices...")
+        println("DataInitializer: Seeding...")
         val locations = createLocations()
+        val users = createUsers()
         val products = productRepository.findAll()
-        createPriceReports(products, locations)
-        println("DataInitializer: Done. ${locations.size} locations, prices generated for ${products.size} products.")
+        createPriceReports(products, locations, users)
+        println("DataInitializer: Done. ${locations.size} locations, ${users.size} users, prices generated for ${products.size} products.")
     }
 
     // ─────────────────────────────────────────────────────────
@@ -138,7 +181,6 @@ class DataInitializer(
             println("DataInitializer: Locations already seeded, skipping.")
             return locationRepository.findAll()
         }
-
         return locationSeeds.map { seed ->
             locationRepository.save(
                 Location().apply {
@@ -147,50 +189,109 @@ class DataInitializer(
                     type = seed.type
                     latitude = seed.latitude
                     longitude = seed.longitude
-                    coordinates =
-                        geometryFactory.createPoint(
-                            Coordinate(seed.longitude, seed.latitude),
-                        )
+                    coordinates = geometryFactory.createPoint(Coordinate(seed.longitude, seed.latitude))
                 },
             )
         }
     }
 
     // ─────────────────────────────────────────────────────────
-    // Step 2 — Price reports with dynamic dates
+    // Step 2 — Users
+    // ─────────────────────────────────────────────────────────
+
+    private fun createUsers(): List<User> {
+        if (userRepository.count() > 0) {
+            println("DataInitializer: Users already seeded, skipping.")
+            return userRepository.findAll()
+        }
+
+        val tierDistribution = listOf(
+            // (tier, count)
+            UserTier.HIGH        to 5,
+            UserTier.GOOD        to 7,
+            UserTier.MID         to 7,
+            UserTier.BORDERLINE  to 5,
+            UserTier.LOW         to 4,
+            UserTier.BAD         to 2,
+        )
+
+        val users = mutableListOf<User>()
+        var index = 1
+
+        tierDistribution.forEach { (tier, count) ->
+            repeat(count) {
+                val trustVariance = rng.nextDouble(-0.05, 0.05)
+                users.add(
+                    userRepository.save(
+                        User().apply {
+                            name = seedNames[index - 1]
+                            lastName = seedLastNames[index - 1]
+                            email = "seed$index@gmail.com"
+                            password = passwordEncoder.encode("password")
+                            trustScore = (tier.trustScore + trustVariance).coerceIn(0.0, 1.0)
+                            recoveryMultiplier = tier.recoveryMultiplier
+                        }
+                    )
+                )
+                index++
+            }
+        }
+
+        println("DataInitializer: Created ${users.size} seeded users.")
+        return users
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Step 3 — Price reports
     // ─────────────────────────────────────────────────────────
 
     private fun createPriceReports(
         products: List<Product>,
         locations: List<Location>,
+        users: List<User>,
     ) {
         products.forEach { product ->
             val reference = findReference(product) ?: return@forEach
 
-            val locationCount =
-                when {
-                    productReferences.count { it.name == product.name && it.brand == product.brand } >= 3 -> rng.nextInt(5, 9)
-                    else -> rng.nextInt(3, 7)
-                }
+            val locationCount = when {
+                productReferences.count { it.name == product.name && it.brand == product.brand } >= 3 -> rng.nextInt(5, 9)
+                else -> rng.nextInt(3, 7)
+            }
 
             locations.shuffled(rng).take(locationCount).forEach { location ->
-                val reportCount = rng.nextInt(1, 4)
+                val reportCount = rng.nextInt(2, 6)
                 generateDates(reportCount).forEach { date ->
-                    val daysAgo =
-                        java.time.temporal.ChronoUnit.DAYS
-                            .between(date, LocalDateTime.now())
-                            .toInt()
+                    val user = users.random(rng)
+                    val tier = tierForScore(user.trustScore)
+
+                    val isAccepted = rng.nextDouble() < tier.acceptedRatio
+                    val status = if (isAccepted) PriceValidity.VALID else PriceValidity.INVALID
+
+                    val daysAgo = java.time.temporal.ChronoUnit.DAYS.between(date, LocalDateTime.now()).toInt()
                     val inflationMultiplier = 1.0 + (daysAgo / 90.0) * 0.08
                     val baseWithInflation = (reference.referencePrice * inflationMultiplier).toInt()
-                    val noise = rng.nextInt(-30, 31) * 10
+
+                    // Rejected reports deviate more from reference price
+                    val noise = if (isAccepted) {
+                        rng.nextInt(-30, 31) * 10
+                    } else {
+                        rng.nextInt(45, 80) * 100 * if (rng.nextBoolean()) 1 else -1
+                    }
                     val finalPrice = (baseWithInflation + noise).coerceAtLeast(100)
+
+                    // Confidence score varies by tier with some noise
+                    val confidenceNoise = rng.nextDouble(-0.1, 0.1)
+                    val confidenceScore = (tier.avgConfidence + confidenceNoise).coerceIn(0.1, 1.0)
 
                     locationProductPriceRepository.save(
                         LocationProductPrice().apply {
                             this.product = product
                             this.location = location
+                            this.user = user
                             this.price = BigDecimal(finalPrice)
                             this.reportedAt = date
+                            this.priceValidity = status
+                            this.locationConfidence = confidenceScore
                         },
                     )
                 }
@@ -198,10 +299,17 @@ class DataInitializer(
         }
     }
 
+    private fun tierForScore(score: Double): UserTier = when {
+        score >= 0.75 -> UserTier.HIGH
+        score >= 0.55 -> UserTier.GOOD
+        score >= 0.35 -> UserTier.MID
+        score >= 0.25 -> UserTier.BORDERLINE
+        score >= 0.10 -> UserTier.LOW
+        else          -> UserTier.BAD
+    }
+
     private fun findReference(product: Product): ProductReference? =
-        productReferences.firstOrNull {
-            it.name == product.name && it.brand == product.brand
-        }
+        productReferences.firstOrNull { it.name == product.name && it.brand == product.brand }
 
     private fun generateDates(count: Int): List<LocalDateTime> =
         (0 until count)
