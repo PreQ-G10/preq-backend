@@ -1,5 +1,6 @@
 package preq.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import preq.repository.LocationProductPriceRepository
 import preq.web.dto.response.HeatmapPointResponse
@@ -8,6 +9,7 @@ import java.math.BigDecimal
 @Service
 class HeatmapService(
     private val locationProductPriceRepository: LocationProductPriceRepository,
+    @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
 ) {
     fun getHeatmapDataForProduct(
         productId: Long,
@@ -16,7 +18,7 @@ class HeatmapService(
         radiusMeters: Double,
     ): List<HeatmapPointResponse> =
         locationProductPriceRepository
-            .getLocationPricesForProductInArea(productId, latitude, longitude, radiusMeters)
+            .getLocationPricesForProductInArea(productId, latitude, longitude, radiusMeters, minimumTrustScore)
             .map {
                 HeatmapPointResponse(
                     locationId = it.getLocationId(),
