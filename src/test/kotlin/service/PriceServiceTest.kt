@@ -36,13 +36,17 @@ class PriceServiceTest {
     private val productRepo: ProductRepository = mock()
     private val locationRepo: LocationRepository = mock()
     private val userRepo: UserRepository = mock()
-    private val service = PriceService(
-        priceRepo, productRepo, locationRepo, userRepo,
-        thresholdPercentage = 0.40,
-        proximityMeters = 200.0,
-        coldStartMinimumReports = 3,
-        minimumTrustScore = 0.25,
-    )
+    private val service =
+        PriceService(
+            priceRepo,
+            productRepo,
+            locationRepo,
+            userRepo,
+            thresholdPercentage = 0.40,
+            proximityMeters = 200.0,
+            coldStartMinimumReports = 3,
+            minimumTrustScore = 0.25,
+        )
 
     // ─────────────────────────────────────────────────────────
     // Helpers
@@ -138,7 +142,10 @@ class PriceServiceTest {
         userLongitude: Double? = null,
     ) = ReportProductPriceRequest(productId, locationId, price, userLatitude, userLongitude)
 
-    private fun existingPricesNear(basePrice: Double, count: Int = 5): List<LocationProductPrice> =
+    private fun existingPricesNear(
+        basePrice: Double,
+        count: Int = 5,
+    ): List<LocationProductPrice> =
         (1..count).map {
             priceEntry(BigDecimal(basePrice + it * 0.01))
         }
@@ -413,10 +420,11 @@ class PriceServiceTest {
         // Simulate far distance — 5km away
         whenever(priceRepo.getDistanceMeters(any(), any(), any())).thenReturn(5000.0)
 
-        val result = service.reportPrice(
-            makeRequest(userLatitude = -34.7600, userLongitude = -58.3500),
-            user
-        )
+        val result =
+            service.reportPrice(
+                makeRequest(userLatitude = -34.7600, userLongitude = -58.3500),
+                user,
+            )
 
         assertTrue(result.locationConfidence < 1.0)
     }
@@ -429,10 +437,11 @@ class PriceServiceTest {
         // Simulate close distance — 50m away
         whenever(priceRepo.getDistanceMeters(any(), any(), any())).thenReturn(50.0)
 
-        val result = service.reportPrice(
-            makeRequest(userLatitude = -34.7148, userLongitude = -58.2983),
-            user
-        )
+        val result =
+            service.reportPrice(
+                makeRequest(userLatitude = -34.7148, userLongitude = -58.2983),
+                user,
+            )
 
         assertEquals(1.0, result.locationConfidence, 0.001)
     }
@@ -511,7 +520,8 @@ class PriceServiceTest {
     fun `weightedPrice favors recent reports over old ones`() {
         val stats = mockStats()
         stubSummaryDeps(
-            1L, stats,
+            1L,
+            stats,
             listOf(
                 priceEntry(BigDecimal("100.00"), daysAgo = 0),
                 priceEntry(BigDecimal("10.00"), daysAgo = 300),
@@ -537,7 +547,8 @@ class PriceServiceTest {
     fun `weightedPrice with same-age entries equals arithmetic mean`() {
         val stats = mockStats()
         stubSummaryDeps(
-            1L, stats,
+            1L,
+            stats,
             listOf(
                 priceEntry(BigDecimal("20.00"), daysAgo = 5),
                 priceEntry(BigDecimal("40.00"), daysAgo = 5),

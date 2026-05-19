@@ -21,7 +21,8 @@ import java.util.Optional
 class CartServiceTest {
     private val locationProductPriceRepository: LocationProductPriceRepository = mock()
     private val productRepository: ProductRepository = mock()
-    private val service = CartService(locationProductPriceRepository, productRepository, nearbyRadiusMeters = 10000.0, minimumTrustScore = 0.25)
+    private val service =
+        CartService(locationProductPriceRepository, productRepository, nearbyRadiusMeters = 10000.0, minimumTrustScore = 0.25)
 
     private fun mockProduct(
         id: Long,
