@@ -32,23 +32,73 @@ class DataInitializer(
     private val rng = Random(42)
     private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
 
-    private val seedNames = listOf(
-        "Mateo", "Valentina", "Santiago", "Sofía", "Nicolás",
-        "Martina", "Tomás", "Lucía", "Benjamín", "Emma",
-        "Lucas", "Camila", "Facundo", "Florencia", "Ignacio",
-        "Agustina", "Joaquín", "Rocío", "Sebastián", "Pilar",
-        "Marcos", "Julieta", "Andrés", "Valeria", "Bruno",
-        "Milagros", "Ezequiel", "Natalia", "Ramiro", "Clara"
-    )
+    private val seedNames =
+        listOf(
+            "Mateo",
+            "Valentina",
+            "Santiago",
+            "Sofía",
+            "Nicolás",
+            "Martina",
+            "Tomás",
+            "Lucía",
+            "Benjamín",
+            "Emma",
+            "Lucas",
+            "Camila",
+            "Facundo",
+            "Florencia",
+            "Ignacio",
+            "Agustina",
+            "Joaquín",
+            "Rocío",
+            "Sebastián",
+            "Pilar",
+            "Marcos",
+            "Julieta",
+            "Andrés",
+            "Valeria",
+            "Bruno",
+            "Milagros",
+            "Ezequiel",
+            "Natalia",
+            "Ramiro",
+            "Clara",
+        )
 
-    private val seedLastNames = listOf(
-        "García", "Martínez", "López", "González", "Rodríguez",
-        "Fernández", "Pérez", "Sánchez", "Romero", "Torres",
-        "Díaz", "Álvarez", "Ruiz", "Moreno", "Muñoz",
-        "Alonso", "Gutiérrez", "Navarro", "Molina", "Domínguez",
-        "Gil", "Vázquez", "Serrano", "Blanco", "Ramírez",
-        "Herrera", "Medina", "Suárez", "Castro", "Ortega"
-    )
+    private val seedLastNames =
+        listOf(
+            "García",
+            "Martínez",
+            "López",
+            "González",
+            "Rodríguez",
+            "Fernández",
+            "Pérez",
+            "Sánchez",
+            "Romero",
+            "Torres",
+            "Díaz",
+            "Álvarez",
+            "Ruiz",
+            "Moreno",
+            "Muñoz",
+            "Alonso",
+            "Gutiérrez",
+            "Navarro",
+            "Molina",
+            "Domínguez",
+            "Gil",
+            "Vázquez",
+            "Serrano",
+            "Blanco",
+            "Ramírez",
+            "Herrera",
+            "Medina",
+            "Suárez",
+            "Castro",
+            "Ortega",
+        )
 
     // ─────────────────────────────────────────────────────────
     // User tiers
@@ -57,8 +107,8 @@ class DataInitializer(
     enum class UserTier(
         val trustScore: Double,
         val recoveryMultiplier: Double,
-        val acceptedRatio: Double,   // probability of ACCEPTED report
-        val avgConfidence: Double,   // base confidence score
+        val acceptedRatio: Double, // probability of ACCEPTED report
+        val avgConfidence: Double, // base confidence score
     ) {
         HIGH(0.85, 1.0, 0.95, 0.95),
         GOOD(0.65, 1.0, 0.85, 0.85),
@@ -205,15 +255,16 @@ class DataInitializer(
             return userRepository.findAll()
         }
 
-        val tierDistribution = listOf(
-            // (tier, count)
-            UserTier.HIGH        to 5,
-            UserTier.GOOD        to 7,
-            UserTier.MID         to 7,
-            UserTier.BORDERLINE  to 5,
-            UserTier.LOW         to 4,
-            UserTier.BAD         to 2,
-        )
+        val tierDistribution =
+            listOf(
+                // (tier, count)
+                UserTier.HIGH to 5,
+                UserTier.GOOD to 7,
+                UserTier.MID to 7,
+                UserTier.BORDERLINE to 5,
+                UserTier.LOW to 4,
+                UserTier.BAD to 2,
+            )
 
         val users = mutableListOf<User>()
         var index = 1
@@ -230,8 +281,8 @@ class DataInitializer(
                             password = passwordEncoder.encode("password")
                             trustScore = (tier.trustScore + trustVariance).coerceIn(0.0, 1.0)
                             recoveryMultiplier = tier.recoveryMultiplier
-                        }
-                    )
+                        },
+                    ),
                 )
                 index++
             }
@@ -253,10 +304,11 @@ class DataInitializer(
         products.forEach { product ->
             val reference = findReference(product) ?: return@forEach
 
-            val locationCount = when {
-                productReferences.count { it.name == product.name && it.brand == product.brand } >= 3 -> rng.nextInt(5, 9)
-                else -> rng.nextInt(3, 7)
-            }
+            val locationCount =
+                when {
+                    productReferences.count { it.name == product.name && it.brand == product.brand } >= 3 -> rng.nextInt(5, 9)
+                    else -> rng.nextInt(3, 7)
+                }
 
             locations.shuffled(rng).take(locationCount).forEach { location ->
                 val reportCount = rng.nextInt(2, 6)
@@ -267,16 +319,20 @@ class DataInitializer(
                     val isAccepted = rng.nextDouble() < tier.acceptedRatio
                     val status = if (isAccepted) PriceValidity.VALID else PriceValidity.INVALID
 
-                    val daysAgo = java.time.temporal.ChronoUnit.DAYS.between(date, LocalDateTime.now()).toInt()
+                    val daysAgo =
+                        java.time.temporal.ChronoUnit.DAYS
+                            .between(date, LocalDateTime.now())
+                            .toInt()
                     val inflationMultiplier = 1.0 + (daysAgo / 90.0) * 0.08
                     val baseWithInflation = (reference.referencePrice * inflationMultiplier).toInt()
 
                     // Rejected reports deviate more from reference price
-                    val noise = if (isAccepted) {
-                        rng.nextInt(-30, 31) * 10
-                    } else {
-                        rng.nextInt(45, 80) * 100 * if (rng.nextBoolean()) 1 else -1
-                    }
+                    val noise =
+                        if (isAccepted) {
+                            rng.nextInt(-30, 31) * 10
+                        } else {
+                            rng.nextInt(45, 80) * 100 * if (rng.nextBoolean()) 1 else -1
+                        }
                     val finalPrice = (baseWithInflation + noise).coerceAtLeast(100)
 
                     // Confidence score varies by tier with some noise
@@ -299,14 +355,15 @@ class DataInitializer(
         }
     }
 
-    private fun tierForScore(score: Double): UserTier = when {
-        score >= 0.75 -> UserTier.HIGH
-        score >= 0.55 -> UserTier.GOOD
-        score >= 0.35 -> UserTier.MID
-        score >= 0.25 -> UserTier.BORDERLINE
-        score >= 0.10 -> UserTier.LOW
-        else          -> UserTier.BAD
-    }
+    private fun tierForScore(score: Double): UserTier =
+        when {
+            score >= 0.75 -> UserTier.HIGH
+            score >= 0.55 -> UserTier.GOOD
+            score >= 0.35 -> UserTier.MID
+            score >= 0.25 -> UserTier.BORDERLINE
+            score >= 0.10 -> UserTier.LOW
+            else -> UserTier.BAD
+        }
 
     private fun findReference(product: Product): ProductReference? =
         productReferences.firstOrNull { it.name == product.name && it.brand == product.brand }

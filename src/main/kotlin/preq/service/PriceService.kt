@@ -27,13 +27,18 @@ class PriceService(
     @Value("\${preq.prices.cold-start-minimum-reports}") private val coldStartMinimumReports: Int,
     @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
 ) {
-    fun reportPrice(request: ReportProductPriceRequest, user: User): LocationProductPrice {
-        val product = productRepository.findById(request.productId).orElseThrow {
-            NoSuchElementException("Product ${request.productId} not found")
-        }
-        val location = locationRepository.findById(request.locationId).orElseThrow {
-            NoSuchElementException("Location ${request.locationId} not found")
-        }
+    fun reportPrice(
+        request: ReportProductPriceRequest,
+        user: User,
+    ): LocationProductPrice {
+        val product =
+            productRepository.findById(request.productId).orElseThrow {
+                NoSuchElementException("Product ${request.productId} not found")
+            }
+        val location =
+            locationRepository.findById(request.locationId).orElseThrow {
+                NoSuchElementException("Location ${request.locationId} not found")
+            }
 
         val allPrices = locationProductPriceRepository.findValidByProductIdOrderByReportedAtDesc(request.productId, minimumTrustScore)
         val weightedAverage = computeWeightedPrice(allPrices)
@@ -60,7 +65,7 @@ class PriceService(
                 this.reportedAt = LocalDateTime.now()
                 this.locationConfidence = locationConfidence
                 this.priceValidity = priceValidity
-            }
+            },
         )
     }
 
