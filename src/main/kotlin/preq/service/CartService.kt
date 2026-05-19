@@ -57,9 +57,10 @@ class CartService(
                 val product = productRepository.findById(item.productId).orElse(null)
                 val productName = product?.name ?: "Producto ${item.productId}"
                 val globalAvg = locationProductPriceRepository.getGlobalAvgPrice(item.productId, minimumTrustScore)
-                val byLocation = locationProductPriceRepository
-                    .getLocationPricesForProduct(item.productId, minimumTrustScore)
-                    .associate { it.getLocationId() to it.getAvgPrice() }
+                val byLocation =
+                    locationProductPriceRepository
+                        .getLocationPricesForProduct(item.productId, minimumTrustScore)
+                        .associate { it.getLocationId() to it.getAvgPrice() }
                 item.productId to ProductPriceData(productName, globalAvg, byLocation)
             }.toMap()
 

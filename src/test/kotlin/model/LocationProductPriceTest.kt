@@ -37,12 +37,13 @@ class LocationProductPriceTest {
             longitude = -58.3816
         }
 
-    private fun validUser() = User().apply {
-        name = "Juan"
-        lastName = "García"
-        email = "juan@preq.app"
-        password = "password123"
-    }
+    private fun validUser() =
+        User().apply {
+            name = "Juan"
+            lastName = "García"
+            email = "juan@preq.app"
+            password = "password123"
+        }
 
     private fun validPrice() =
         LocationProductPrice().apply {
