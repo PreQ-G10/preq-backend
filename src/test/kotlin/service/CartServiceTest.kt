@@ -21,7 +21,7 @@ import java.util.Optional
 class CartServiceTest {
     private val locationProductPriceRepository: LocationProductPriceRepository = mock()
     private val productRepository: ProductRepository = mock()
-    private val service = CartService(locationProductPriceRepository, productRepository, nearbyRadiusMeters = 10000.0)
+    private val service = CartService(locationProductPriceRepository, productRepository, nearbyRadiusMeters = 10000.0, minimumTrustScore = 0.25)
 
     private fun mockProduct(
         id: Long,
@@ -71,8 +71,8 @@ class CartServiceTest {
         globalAvg: Double?,
         vararg locationPrices: LocationPriceResult,
     ) {
-        whenever(locationProductPriceRepository.getGlobalAvgPrice(productId)).thenReturn(globalAvg)
-        whenever(locationProductPriceRepository.getLocationPricesForProduct(productId)).thenReturn(locationPrices.toList())
+        whenever(locationProductPriceRepository.getGlobalAvgPrice(productId, 0.25)).thenReturn(globalAvg)
+        whenever(locationProductPriceRepository.getLocationPricesForProduct(productId, 0.25)).thenReturn(locationPrices.toList())
     }
 
     // ─── empty / no data ─────────────────────────────────────────────────────────

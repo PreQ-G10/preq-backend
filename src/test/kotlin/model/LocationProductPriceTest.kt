@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import preq.model.Location
 import preq.model.LocationProductPrice
 import preq.model.Product
+import preq.model.User
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -36,10 +37,18 @@ class LocationProductPriceTest {
             longitude = -58.3816
         }
 
+    private fun validUser() = User().apply {
+        name = "Juan"
+        lastName = "García"
+        email = "juan@preq.app"
+        password = "password123"
+    }
+
     private fun validPrice() =
         LocationProductPrice().apply {
             product = validProduct()
             location = validLocation()
+            user = validUser()
             price = BigDecimal("1500.00")
             reportedAt = LocalDateTime.now()
         }
