@@ -12,7 +12,6 @@ import preq.web.dto.projection.TopLocationResult
 
 @Repository
 interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, Long> {
-
     @Query(
         value = """
             SELECT 
