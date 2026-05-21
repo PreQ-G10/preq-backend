@@ -24,5 +24,4 @@ class PriceValidation : BaseEntity() {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var type: PriceValidationType = PriceValidationType.CONFIRM
-
 }

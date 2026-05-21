@@ -6,5 +6,8 @@ import preq.model.PriceValidation
 
 @Repository
 interface PriceValidationRepository : JpaRepository<PriceValidation, Long> {
-    fun existsByReportIdAndUserId(reportId: Long, userId: Long): Boolean
+    fun existsByReportIdAndUserId(
+        reportId: Long,
+        userId: Long,
+    ): Boolean
 }
