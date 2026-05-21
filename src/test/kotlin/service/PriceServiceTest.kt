@@ -172,8 +172,7 @@ class PriceServiceTest {
     private fun existingPricesNear(
         basePrice: Double,
         count: Int = 5,
-    ): List<LocationProductPrice> =
-        (1..count).map { priceEntry(BigDecimal(basePrice + it * 0.01)) }
+    ): List<LocationProductPrice> = (1..count).map { priceEntry(BigDecimal(basePrice + it * 0.01)) }
 
     // ─────────────────────────────────────────────────────────
     // reportPrice — basic
@@ -494,10 +493,11 @@ class PriceServiceTest {
         stubReportDeps(user = user, location = location, totalReports = 0L)
         whenever(priceRepo.getDistanceMeters(any(), any(), any())).thenReturn(5000.0)
 
-        val result = service.reportPrice(
-            makeRequest(userLatitude = -34.7600, userLongitude = -58.3500),
-            user,
-        )
+        val result =
+            service.reportPrice(
+                makeRequest(userLatitude = -34.7600, userLongitude = -58.3500),
+                user,
+            )
 
         assertTrue(result.locationConfidence < 1.0)
     }
@@ -509,10 +509,11 @@ class PriceServiceTest {
         stubReportDeps(user = user, location = location, totalReports = 0L)
         whenever(priceRepo.getDistanceMeters(any(), any(), any())).thenReturn(50.0)
 
-        val result = service.reportPrice(
-            makeRequest(userLatitude = -34.7148, userLongitude = -58.2983),
-            user,
-        )
+        val result =
+            service.reportPrice(
+                makeRequest(userLatitude = -34.7148, userLongitude = -58.2983),
+                user,
+            )
 
         assertEquals(1.0, result.locationConfidence, 0.001)
     }
@@ -723,7 +724,8 @@ class PriceServiceTest {
     fun `weightedPrice favors recent reports over old ones`() {
         val stats = mockStats()
         stubSummaryDeps(
-            1L, stats,
+            1L,
+            stats,
             listOf(
                 priceEntry(BigDecimal("100.00"), daysAgo = 0),
                 priceEntry(BigDecimal("10.00"), daysAgo = 300),
@@ -749,7 +751,8 @@ class PriceServiceTest {
     fun `weightedPrice with same-age entries equals arithmetic mean`() {
         val stats = mockStats()
         stubSummaryDeps(
-            1L, stats,
+            1L,
+            stats,
             listOf(
                 priceEntry(BigDecimal("20.00"), daysAgo = 5),
                 priceEntry(BigDecimal("40.00"), daysAgo = 5),
@@ -765,7 +768,8 @@ class PriceServiceTest {
     fun `weightedPrice - low locationConfidence reduces weight of report`() {
         val stats = mockStats()
         stubSummaryDeps(
-            1L, stats,
+            1L,
+            stats,
             listOf(
                 priceEntry(BigDecimal("100.00"), daysAgo = 0, locationConfidence = 1.0),
                 priceEntry(BigDecimal("10.00"), daysAgo = 0, locationConfidence = 0.1),

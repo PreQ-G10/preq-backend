@@ -34,13 +34,18 @@ class PriceService(
     @Value("\${preq.prices.cold-start-minimum-reports}") private val coldStartMinimumReports: Int,
     @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
 ) {
-    fun reportPrice(request: ReportProductPriceRequest, user: User): LocationProductPrice {
-        val product = productRepository.findById(request.productId).orElseThrow {
-            NoSuchElementException("Product ${request.productId} not found")
-        }
-        val location = locationRepository.findById(request.locationId).orElseThrow {
-            NoSuchElementException("Location ${request.locationId} not found")
-        }
+    fun reportPrice(
+        request: ReportProductPriceRequest,
+        user: User,
+    ): LocationProductPrice {
+        val product =
+            productRepository.findById(request.productId).orElseThrow {
+                NoSuchElementException("Product ${request.productId} not found")
+            }
+        val location =
+            locationRepository.findById(request.locationId).orElseThrow {
+                NoSuchElementException("Location ${request.locationId} not found")
+            }
 
         val allPrices = locationProductPriceRepository.findValidByProductIdOrderByReportedAtDesc(request.productId)
         val weightedAverage = computeWeightedPrice(allPrices)
@@ -66,23 +71,31 @@ class PriceService(
                 this.reportedAt = LocalDateTime.now()
                 this.locationConfidence = locationConfidence
                 this.score = score
-            }
+            },
         )
     }
 
-    fun getPendingValidation(user: User, latitude: Double, longitude: Double): List<PendingValidationResponse> {
+    fun getPendingValidation(
+        user: User,
+        latitude: Double,
+        longitude: Double,
+    ): List<PendingValidationResponse> {
         if (user.trustScore < minimumTrustScore) return emptyList()
         return locationProductPriceRepository
             .findPendingValidationNearby(user.id, latitude, longitude, proximityMeters)
             .map { PendingValidationResponse.from(it) }
     }
 
-    fun confirmPrice(reportId: Long, confirmer: User): ConfirmPriceResponse {
+    fun confirmPrice(
+        reportId: Long,
+        confirmer: User,
+    ): ConfirmPriceResponse {
         if (confirmer.trustScore < minimumTrustScore) throw IllegalStateException("User trust score too low to confirm")
 
-        val report = locationProductPriceRepository.findById(reportId).orElseThrow {
-            NoSuchElementException("Report $reportId not found")
-        }
+        val report =
+            locationProductPriceRepository.findById(reportId).orElseThrow {
+                NoSuchElementException("Report $reportId not found")
+            }
 
         if (priceValidationRepository.existsByReportIdAndUserId(reportId, confirmer.id)) {
             return ConfirmPriceResponse()
@@ -95,21 +108,28 @@ class PriceService(
         confirmer.trustScore = (confirmer.trustScore + 0.01 * confirmer.recoveryMultiplier).coerceIn(0.0, 1.0)
         userRepository.save(confirmer)
 
-        priceValidationRepository.save(PriceValidation().apply {
-            this.report = report
-            this.user = confirmer
-            this.type = PriceValidationType.CONFIRM
-        })
+        priceValidationRepository.save(
+            PriceValidation().apply {
+                this.report = report
+                this.user = confirmer
+                this.type = PriceValidationType.CONFIRM
+            },
+        )
 
         return ConfirmPriceResponse()
     }
 
-    fun disputePrice(reportId: Long, disputer: User, request: DisputePriceRequest): LocationProductPrice {
+    fun disputePrice(
+        reportId: Long,
+        disputer: User,
+        request: DisputePriceRequest,
+    ): LocationProductPrice {
         if (disputer.trustScore < minimumTrustScore) throw IllegalStateException("User trust score too low to dispute")
 
-        val report = locationProductPriceRepository.findById(reportId).orElseThrow {
-            NoSuchElementException("Report $reportId not found")
-        }
+        val report =
+            locationProductPriceRepository.findById(reportId).orElseThrow {
+                NoSuchElementException("Report $reportId not found")
+            }
 
         if (priceValidationRepository.existsByReportIdAndUserId(reportId, disputer.id)) {
             throw IllegalStateException("Already disputed this report")
@@ -130,22 +150,25 @@ class PriceService(
         userRepository.save(reporter)
 
         // store disputer's alternative price through full ingestion pipeline
-        val alternativePriceReport = reportPrice(
-            ReportProductPriceRequest(
-                productId = report.product!!.id,
-                locationId = report.location!!.id,
-                price = request.alternativePrice,
-                userLatitude = request.userLatitude,
-                userLongitude = request.userLongitude,
-            ),
-            disputer,
-        )
+        val alternativePriceReport =
+            reportPrice(
+                ReportProductPriceRequest(
+                    productId = report.product!!.id,
+                    locationId = report.location!!.id,
+                    price = request.alternativePrice,
+                    userLatitude = request.userLatitude,
+                    userLongitude = request.userLongitude,
+                ),
+                disputer,
+            )
 
-        priceValidationRepository.save(PriceValidation().apply {
-            this.report = report
-            this.user = disputer
-            this.type = PriceValidationType.DISPUTE
-        })
+        priceValidationRepository.save(
+            PriceValidation().apply {
+                this.report = report
+                this.user = disputer
+                this.type = PriceValidationType.DISPUTE
+            },
+        )
 
         return alternativePriceReport
     }
@@ -194,13 +217,15 @@ class PriceService(
             }
         }
 
-        val deviationPenalty = if (!skipThresholdCheck && weightedAverage != null) {
-            val deviation = abs((request.price.toDouble() - weightedAverage) / weightedAverage)
-            deviation / thresholdPercentage
-        } else {
-            0.0
-        }
-        val initialScore = locationConfidence *
+        val deviationPenalty =
+            if (!skipThresholdCheck && weightedAverage != null) {
+                val deviation = abs((request.price.toDouble() - weightedAverage) / weightedAverage)
+                deviation / thresholdPercentage
+            } else {
+                0.0
+            }
+        val initialScore =
+            locationConfidence *
                 (0.5 + user.trustScore * 0.5) *
                 (1 - deviationPenalty * 0.3)
 
