@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import preq.enum.ReportScore
 import preq.model.LocationProductPrice
 import preq.web.dto.projection.LocationPriceResult
 import preq.web.dto.projection.PriceStats
@@ -11,6 +12,7 @@ import preq.web.dto.projection.TopLocationResult
 
 @Repository
 interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, Long> {
+
     @Query(
         value = """
             SELECT 
@@ -20,14 +22,13 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             FROM location_product_price lpp
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
         """,
         nativeQuery = true,
     )
     fun getPriceStats(
         @Param("productId") productId: Long,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): PriceStats
 
     @Query(
@@ -37,8 +38,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN location l ON l.id = lpp.location_id
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
             GROUP BY l.id, l.name, l.address
             ORDER BY reportCount DESC
             LIMIT 5
@@ -47,7 +47,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
     )
     fun getTopLocations(
         @Param("productId") productId: Long,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<TopLocationResult>
 
     @Query(
@@ -63,15 +63,14 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN location l ON l.id = lpp.location_id
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
             GROUP BY l.id, l.name, l.address, l.latitude, l.longitude
         """,
         nativeQuery = true,
     )
     fun getLocationPricesForProduct(
         @Param("productId") productId: Long,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<LocationPriceResult>
 
     @Query(
@@ -87,8 +86,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN location l ON l.id = lpp.location_id
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
             AND ST_DistanceSphere(
                 ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326),
                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
@@ -102,7 +100,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("latitude") latitude: Double,
         @Param("longitude") longitude: Double,
         @Param("radiusMeters") radiusMeters: Double,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<LocationPriceResult>
 
     @Query(
@@ -111,14 +109,13 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             FROM location_product_price lpp
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
         """,
         nativeQuery = true,
     )
     fun getGlobalAvgPrice(
         @Param("productId") productId: Long,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): Double?
 
     @Query(
@@ -126,15 +123,14 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             SELECT lpp.* FROM location_product_price lpp
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
             ORDER BY lpp.reported_at DESC
         """,
         nativeQuery = true,
     )
     fun findValidByProductIdOrderByReportedAtDesc(
         @Param("productId") productId: Long,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<LocationProductPrice>
 
     @Query(
@@ -142,14 +138,13 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             SELECT COUNT(*) FROM location_product_price lpp
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
-            AND lpp.price_validity = 'VALID'
-            AND u.trust_score >= :minimumTrustScore
+            AND lpp.score >= :validThreshold
         """,
         nativeQuery = true,
     )
     fun countValidByProductId(
         @Param("productId") productId: Long,
-        @Param("minimumTrustScore") minimumTrustScore: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): Long
 
     @Query(
@@ -168,4 +163,32 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("userLng") userLng: Double,
         @Param("locationId") locationId: Long,
     ): Double
+
+    @Query(
+        value = """
+            SELECT lpp.* FROM location_product_price lpp
+            JOIN location l ON l.id = lpp.location_id
+            WHERE lpp.score >= :pendingMin
+            AND lpp.score < :validMin
+            AND ST_DistanceSphere(
+                ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326),
+                ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
+            ) <= :radiusMeters
+            AND lpp.id NOT IN (
+                SELECT pv.report_id FROM price_validations pv WHERE pv.user_id = :userId
+            )
+            AND lpp.reported_at >= NOW() - INTERVAL '15 days'
+            AND lpp.user_id <> :userId
+            ORDER BY lpp.reported_at DESC
+        """,
+        nativeQuery = true,
+    )
+    fun findPendingValidationNearby(
+        @Param("userId") userId: Long,
+        @Param("latitude") latitude: Double,
+        @Param("longitude") longitude: Double,
+        @Param("radiusMeters") radiusMeters: Double,
+        @Param("pendingMin") pendingMin: Double = ReportScore.PENDING_MIN,
+        @Param("validMin") validMin: Double = ReportScore.VALID_MIN,
+    ): List<LocationProductPrice>
 }

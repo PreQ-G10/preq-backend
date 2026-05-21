@@ -2,8 +2,6 @@ package preq.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -11,7 +9,7 @@ import jakarta.persistence.Table
 import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.PastOrPresent
-import preq.enum.PriceValidity
+import preq.enum.ReportScore
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -40,12 +38,14 @@ class LocationProductPrice : BaseEntity() {
     @PastOrPresent(message = "Reported date cannot be in the future")
     var reportedAt: LocalDateTime = LocalDateTime.now()
 
-    @Column(name = "confidence_score", nullable = false)
+    @Column(name = "location_confidence", nullable = false)
     var locationConfidence: Double = 1.0
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var priceValidity: PriceValidity = PriceValidity.VALID
+    @Column(name = "score", nullable = false)
+    var score: Double = 1.0
+
+    val reportScore: ReportScore
+        get() = ReportScore.fromScore(score)
 
     fun ageInDays() = ChronoUnit.DAYS.between(reportedAt, LocalDateTime.now())
 }
