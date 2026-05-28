@@ -384,21 +384,19 @@ class ProductServiceTest {
 
     @Test
     fun `confirmMatch should increase user scores, add images to consensus, and approve when consensus is reached via resolveConsensus`() {
-        // 1. Setup Test Data
         val productId = 1L
         val product = Product().apply { id = productId }
         val file: MultipartFile = mock()
-        val similarity = 0.5 // Below confidenceThreshold to trigger resolveConsensus
+        val similarity = 0.5
         val currentUser =
             User().apply {
                 id = 10L
                 trustScore = 0.1
-            } // Trust score below minimumTrustScore
+            }
 
         var embedding = floatArrayOf(0.1f, 0.2f, 0.3f)
         val imageUrl = "http://cloudinary.com/image.jpg"
 
-        // Create 3 ProductImage objects that will form the consensus
         val user1 =
             User().apply {
                 id = 20L
@@ -441,11 +439,10 @@ class ProductServiceTest {
         `when`(imageEmbeddingService.generateEmbedding(file)).thenReturn(embedding)
         `when`(cloudinaryService.upload(file)).thenReturn(imageUrl)
 
-        // Mock productImageRepository to return the 3 consensus images for resolveConsensus
         `when`(
             productImageRepository.findToproductConsensusForEmbedding(
                 eq(product.id),
-                anyString(), // The embedding string
+                anyString(),
                 eq(currentUser.id),
             ),
         ).thenReturn(consensusImages)
@@ -460,28 +457,19 @@ class ProductServiceTest {
             null
         }
 
-        // Mock productRepository.save to return the modified product
         `when`(productRepository.save(any())).thenAnswer { invocation ->
             invocation.getArgument<Product>(0)
         }
 
-        // 3. Call the method under test
         val updatedProduct = service.confirmMatch(productId, file, similarity, currentUser)
 
-        // 4. Assertions
-
-        // Verify that productRepository.findById was called
         verify(productRepository).findById(productId)
-        // Verify that imageEmbeddingService.generateEmbedding was called
         verify(imageEmbeddingService).generateEmbedding(file)
-        // Verify that cloudinaryService.upload was called
         verify(cloudinaryService).upload(file)
 
-        // Verify that the current user's score was increased
         verify(userService).addScore(currentUser, 0.01)
         assertEquals(0.11, currentUser.trustScore, "Current user's score should be increased")
 
-        // Verify that the scores of the users who contributed to the consensus were increased
         verify(userService).addScore(user1, 0.01)
         assertEquals(0.21, user1.trustScore, "Consensus user 1's score should be increased")
         verify(userService).addScore(user2, 0.01)
@@ -489,11 +477,9 @@ class ProductServiceTest {
         verify(userService).addScore(user3, 0.01)
         assertEquals(0.41, user3.trustScore, "Consensus user 3's score should be increased")
 
-        // Verify that the images were added to the product's consensusImages list
         assertEquals(3, updatedProduct.consensusImages.size, "Product should have 3 consensus images")
         assertTrue(updatedProduct.consensusImages.containsAll(consensusImages), "Consensus images should be added to product")
 
-        // Verify that a new ProductImage was added to the product's images list
         assertEquals(1, updatedProduct.images.size, "One new image should be added to product images")
         val newProductImage = updatedProduct.images.first()
         assertEquals(ProductImageStatus.APPROVED, newProductImage.status, "New image status should be APPROVED")
@@ -503,7 +489,6 @@ class ProductServiceTest {
         assertEquals(currentUser, newProductImage.user, "New image user should match")
         assertTrue(newProductImage.validForConsensus, "New image validForConsensus should be false as consensus was reached")
 
-        // Verify that productRepository.save was called with the updated product
         verify(productRepository).save(updatedProduct)
     }
 }
