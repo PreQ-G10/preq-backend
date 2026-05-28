@@ -4,6 +4,7 @@ import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
 import org.springframework.stereotype.Service
+import preq.model.User
 import preq.repository.UserRepository
 import preq.web.dto.request.UpdateUserRequest
 import preq.web.dto.response.UserProfileResponse
@@ -41,5 +42,13 @@ class UserService(
             }
         userRepository.save(user)
         return getProfile(email)
+    }
+
+    fun addScore(
+        user: User,
+        score: Double,
+    ) {
+        user.trustScore += score
+        userRepository.save(user)
     }
 }
