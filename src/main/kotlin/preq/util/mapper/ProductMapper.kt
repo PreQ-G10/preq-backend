@@ -2,12 +2,14 @@ package preq.util.mapper
 
 import preq.model.Product
 import preq.model.ProductImage
+import preq.model.User // Import User
 import preq.web.dto.response.OpenFoodFactsProductResponse
 
 object ProductMapper {
     fun fromOpenFoodFactsApiResponse(
         barcode: String,
         api: OpenFoodFactsProductResponse,
+        user: User,
     ): Product {
         val product = Product()
 
@@ -16,6 +18,8 @@ object ProductMapper {
                 ProductImage().apply {
                     this.product = product
                     this.imageUrl = url
+                    this.user = user
+                    this.validForConsensus = false
                 }
             product.images.add(productImg)
         }

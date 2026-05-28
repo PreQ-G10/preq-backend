@@ -25,6 +25,11 @@ class ProductImage : BaseEntity() {
     @NotNull
     var product: Product? = null
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @NotNull
+    var user: User? = null
+
     @NotBlank
     @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*", message = "Image URL must be a valid Cloudinary URL")
     var imageUrl: String = ""
@@ -39,6 +44,8 @@ class ProductImage : BaseEntity() {
     @DecimalMin(value = "0.0", message = "Confidence score must be >= 0.0")
     @DecimalMax(value = "1.0", message = "Confidence score must be <= 1.0")
     var confidenceScore: Double = 0.0
+
+    var validForConsensus: Boolean = false
 
     fun isApproved() = status == ProductImageStatus.APPROVED
 

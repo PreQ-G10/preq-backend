@@ -24,4 +24,25 @@ interface ProductImageRepository : JpaRepository<ProductImage, Long> {
         @Param("embedding") embedding: String,
         @Param("limit") limit: Int = 10,
     ): List<SimilarProductResult>
+
+    @Query(
+        value = """
+            SELECT pi.product_id, pi.user_id
+            FROM product_image pi
+            WHERE pi.product_id = :productId
+            AND pi.embedding IS NOT NULL
+            AND pi.consensus = true
+            AND pi.status = 'PENDING'
+            AND user IS NOT NULL
+            AND pi.user_id != :current_user
+            AND (1 - (e.embedding <=> :newEmbedding)) >= 0.8;
+            ORDER BY similarity DESC;
+            LIMIT 3
+        """,
+    )
+    fun findToproductConsensusForEmbedding(
+        productId: Long,
+        newEmbedding: String,
+        currentUser: Long,
+    ): List<ProductImage>
 }
