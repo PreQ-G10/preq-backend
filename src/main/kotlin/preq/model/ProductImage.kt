@@ -27,7 +27,6 @@ class ProductImage : BaseEntity() {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @NotNull
     var user: User? = null
 
     @NotBlank
