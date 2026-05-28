@@ -1,5 +1,6 @@
 package controller
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -17,9 +18,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import preq.Application
 import preq.model.Product
+import preq.model.User
+import preq.repository.UserRepository
 import preq.service.JwtService
 import preq.service.ProductService
 import preq.web.controller.ProductController
+import java.security.Principal
+import java.util.Optional
 
 @WebMvcTest(ProductController::class)
 @ContextConfiguration(classes = [Application::class])
@@ -36,6 +41,25 @@ class ProductControllerTest {
 
     @MockitoBean
     lateinit var userDetailsService: UserDetailsService
+
+    @MockitoBean
+    lateinit var userRepository: UserRepository
+
+    lateinit var principal: Principal
+    lateinit var user: User
+
+    @BeforeEach
+    fun setup() {
+        user = User().apply { email = "test@mail.com" }
+        principal =
+            Principal {
+                user.email
+            }
+
+        whenever(
+            userRepository.findByEmail(user.email),
+        ).thenReturn(Optional.of(user))
+    }
 
     @Test
     fun `GET search returns matching products`() {
@@ -71,13 +95,14 @@ class ProductControllerTest {
                 name = "Pasta de Maní"
                 brand = "Maní King"
             }
-        whenever(productService.confirmMatch(eq(1L), any(), eq(0.92))).thenReturn(product)
+        whenever(productService.confirmMatch(eq(1L), any(), eq(0.92), eq(user))).thenReturn(product)
 
         mockMvc
             .perform(
                 multipart("/api/products/1/confirm-image")
                     .file("file", ByteArray(1))
-                    .param("similarity", "0.92"),
+                    .param("similarity", "0.92")
+                    .principal(principal),
             ).andExpect(status().isOk)
             .andExpect(jsonPath("$.name").value("Pasta de Maní"))
     }
