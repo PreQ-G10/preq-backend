@@ -35,10 +35,11 @@ interface ProductImageRepository : JpaRepository<ProductImage, Long> {
             AND pi.status = 'PENDING'
             AND user IS NOT NULL
             AND pi.user_id != :current_user
-            AND (1 - (e.embedding <=> :newEmbedding)) >= 0.8;
+            AND (1 - (pi.embedding <=> :newEmbedding)) >= 0.8;
             ORDER BY similarity DESC;
             LIMIT 3
         """,
+        nativeQuery = true,
     )
     fun findToproductConsensusForEmbedding(
         productId: Long,
