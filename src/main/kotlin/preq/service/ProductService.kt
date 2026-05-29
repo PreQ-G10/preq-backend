@@ -4,14 +4,19 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import preq.enum.BarcodeDetectionStatus
+import preq.enum.FieldContestStatus
+import preq.enum.FieldType
 import preq.enum.ProductImageStatus
 import preq.exceptions.ExternalApiException
 import preq.model.Product
+import preq.model.ProductFieldContest
 import preq.model.ProductImage
 import preq.model.User
+import preq.repository.ProductFieldContestRepository
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
 import preq.util.mapper.ProductMapper
+import preq.web.dto.request.ContestProductFieldRequest
 import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.ProductDetectionResponse
@@ -25,6 +30,7 @@ class ProductService(
     private val cloudinaryService: CloudinaryService,
     private val openFoodFactsService: OpenFoodFactsService,
     private val userService: UserService,
+    private val contestRepository: ProductFieldContestRepository,
     private val confidenceThreshold: Double = 0.78,
     @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
 ) {
@@ -239,6 +245,71 @@ class ProductService(
             return ProductImageStatus.PENDING_REVIEW
         }
     }
+
+    fun contestField(
+        productId: Long,
+        field: ContestProductFieldRequest,
+        user: User,
+    ): FieldContestStatus {
+        val contestAlreadyExists =
+            contestRepository.existsByProductIdAndUserIdAndFieldType(
+                productId,
+                user.id,
+                field.fieldType,
+            )
+        print(contestAlreadyExists)
+        if (contestAlreadyExists) {
+            return FieldContestStatus.ALREADY_SUBMITTED
+        } else {
+            val product = productRepository.findById(productId).orElseThrow()
+
+            val field =
+                contestRepository.save(
+                    ProductFieldContest().apply
+                        {
+                            this.product = product
+                            this.user = user
+                            this.fieldType = field.fieldType
+                            this.fieldValue = field.fieldValue
+                        },
+                )
+
+            contestCurrentField(product, field)
+
+            return FieldContestStatus.FIRST_SUBMIT
+        }
+    }
+
+    private fun contestCurrentField(
+        product: Product,
+        field: ProductFieldContest,
+    ) {
+        val normalizedValue = normalizeValue(field.fieldType, field.fieldValue)
+
+        val bestContest = contestRepository.getMostVotedValue(product.id, field.fieldType)
+
+        if (normalizedValue != bestContest) return
+
+        when (field.fieldType) {
+            FieldType.BRAND -> product.brand = field.fieldValue
+            FieldType.NAME -> product.name = field.fieldValue
+            FieldType.QUANTITY -> product.quantity = field.fieldValue.toBigDecimal()
+            FieldType.QUANTITY_TYPE -> product.quantityType = field.fieldValue
+        }
+
+        productRepository.save(product)
+    }
+
+    private fun normalizeValue(
+        field: FieldType,
+        value: String,
+    ): String =
+        when (field) {
+            FieldType.BRAND -> value.trim()
+            FieldType.NAME -> value.trim()
+            FieldType.QUANTITY -> value.toDouble().toString()
+            FieldType.QUANTITY_TYPE -> value.trim()
+        }
 
     fun searchByName(name: String): List<Product> = productRepository.searchByName(name)
 }
