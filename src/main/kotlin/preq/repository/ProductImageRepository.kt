@@ -15,6 +15,7 @@ interface ProductImageRepository : JpaRepository<ProductImage, Long> {
             FROM product_image pi
             WHERE pi.embedding IS NOT NULL
             AND pi.status = 'APPROVED'
+            AND pi.created_at >= NOW() - INTERVAL '1 year' -- Added filter for images created within the last year
             ORDER BY pi.embedding <=> CAST(:embedding AS vector)
             LIMIT :limit
         """,
@@ -27,23 +28,23 @@ interface ProductImageRepository : JpaRepository<ProductImage, Long> {
 
     @Query(
         value = """
-            SELECT pi.product_id, pi.user_id
+            SELECT pi.* -- Select all columns for ProductImage entity
             FROM product_image pi
             WHERE pi.product_id = :productId
             AND pi.embedding IS NOT NULL
-            AND pi.consensus = true
-            AND pi.status = 'PENDING'
-            AND user IS NOT NULL
+            AND pi.status = 'PENDING_REVIEW' -- Changed from 'PENDING' to 'PENDING_REVIEW' based on ProductImageStatus enum
+            AND pi.user_id IS NOT NULL
             AND pi.user_id != :current_user
-            AND (1 - (pi.embedding <=> :newEmbedding)) >= 0.8;
-            ORDER BY similarity DESC;
+            AND pi.created_at >= NOW() - INTERVAL '1 year' -- Added filter for images created within the last year
+            AND (1 - (pi.embedding <=> CAST(:newEmbedding AS vector))) >= 0.8
+            ORDER BY (1 - (pi.embedding <=> CAST(:newEmbedding AS vector))) DESC -- Order by similarity
             LIMIT 3
         """,
         nativeQuery = true,
     )
     fun findToproductConsensusForEmbedding(
-        productId: Long,
-        newEmbedding: String,
-        currentUser: Long,
+        @Param("productId") productId: Long,
+        @Param("newEmbedding") newEmbedding: String,
+        @Param("current_user") currentUser: Long,
     ): List<ProductImage>
 }

@@ -44,8 +44,6 @@ class ProductImage : BaseEntity() {
     @DecimalMax(value = "1.0", message = "Confidence score must be <= 1.0")
     var confidenceScore: Double = 0.0
 
-    var validForConsensus: Boolean = false
-
     fun isApproved() = status == ProductImageStatus.APPROVED
 
     fun hasEmbedding() = embedding != null

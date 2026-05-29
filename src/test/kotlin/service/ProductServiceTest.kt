@@ -490,7 +490,6 @@ class ProductServiceTest {
         assertEquals(embedding, newProductImage.embedding, "New image embedding should match")
         assertEquals(similarity, newProductImage.confidenceScore, "New image confidence score should match")
         assertEquals(currentUser, newProductImage.user, "New image user should match")
-        assertTrue(newProductImage.validForConsensus, "New image validForConsensus should be false as consensus was reached")
 
         verify(productRepository).save(updatedProduct)
     }
