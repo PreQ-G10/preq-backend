@@ -164,7 +164,6 @@ class ProductService(
                 this.confidenceScore = 1.0
                 this.status = ProductImageStatus.APPROVED
                 this.user = user
-                this.validForConsensus = false
             },
         )
 
@@ -207,7 +206,6 @@ class ProductService(
                 this.confidenceScore = similarity
                 this.status = status
                 this.user = user
-                this.validForConsensus = user.trustScore < minimumTrustScore
             },
         )
 
@@ -224,7 +222,7 @@ class ProductService(
         if (eligibleForConsensus && product.compareInConsensus(embedding)) {
             return ProductImageStatus.APPROVED
         } else if (!eligibleForConsensus) {
-            return ProductImageStatus.PENDING_REVIEW
+            return ProductImageStatus.REJECTED
         }
 
         val consensus =
