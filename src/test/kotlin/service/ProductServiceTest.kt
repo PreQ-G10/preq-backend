@@ -22,6 +22,7 @@ import preq.exceptions.ExternalApiException
 import preq.model.Product
 import preq.model.ProductImage
 import preq.model.User
+import preq.repository.ProductFieldContestRepository
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
 import preq.service.CloudinaryService
@@ -44,6 +45,7 @@ class ProductServiceTest {
     private val cloudinaryService: CloudinaryService = mock()
     private val openFoodFactsService: OpenFoodFactsService = mock()
     private val userService: UserService = mock()
+    private val contestRepository: ProductFieldContestRepository = mock()
     private val service =
         ProductService(
             productRepository,
@@ -52,6 +54,7 @@ class ProductServiceTest {
             cloudinaryService,
             openFoodFactsService,
             userService,
+            contestRepository,
             minimumTrustScore = 0.8,
         )
 

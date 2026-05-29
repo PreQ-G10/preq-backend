@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import preq.enum.FieldContestStatus
 import preq.model.User
 import preq.repository.UserRepository
 import preq.service.ProductService
+import preq.web.dto.request.ContestProductFieldRequest
 import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.ProductResponse
@@ -71,4 +73,11 @@ class ProductController(
         @RequestParam confirm: Boolean,
         principal: Principal,
     ): ProductResponse = ProductResponse.from(productService.resolveBarcodeCollision(id, barcode, confirm, user(principal)))
+
+    @PostMapping("/{id}/contestField")
+    fun contestField(
+        @PathVariable id: Long,
+        @RequestBody field: ContestProductFieldRequest,
+        principal: Principal,
+    ): FieldContestStatus = productService.contestField(id, field, user(principal))
 }
