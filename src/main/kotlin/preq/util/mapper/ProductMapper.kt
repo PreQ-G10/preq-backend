@@ -19,7 +19,6 @@ object ProductMapper {
                     this.product = product
                     this.imageUrl = url
                     this.user = user
-                    this.validForConsensus = false
                 }
             product.images.add(productImg)
         }
