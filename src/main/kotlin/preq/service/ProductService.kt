@@ -92,6 +92,8 @@ class ProductService(
                         brand = apiProductMapped.brand,
                         quantity = apiProductMapped.quantity,
                         quantityType = apiProductMapped.quantityType,
+                        minPrice = null,
+                        maxPrice = null,
                         barcode = barcode,
                         images = apiProductMapped.images.map { it.imageUrl },
                     ),

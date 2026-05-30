@@ -313,6 +313,9 @@ class DataInitializer(
                     else -> rng.nextInt(3, 7)
                 }
 
+            var currentMinPrice: BigDecimal? = null
+            var currentMaxPrice: BigDecimal? = null
+
             locations.shuffled(rng).take(locationCount).forEach { location ->
                 val reportCount = rng.nextInt(2, 6)
                 generateDates(reportCount).forEach { date ->
@@ -340,6 +343,13 @@ class DataInitializer(
                         }
                     val finalPrice = (baseWithInflation + noise).coerceAtLeast(100)
 
+                    if (currentMinPrice == null || BigDecimal(finalPrice) < currentMinPrice) {
+                        currentMinPrice = BigDecimal(finalPrice)
+                    }
+                    if (currentMaxPrice == null || BigDecimal(finalPrice) > currentMaxPrice) {
+                        currentMaxPrice = BigDecimal(finalPrice)
+                    }
+
                     // locationConfidence varies realistically
                     val locationConfidence = (0.7 + rng.nextDouble(0.0, 0.3)).coerceIn(0.0, 1.0)
 
@@ -356,6 +366,9 @@ class DataInitializer(
                     )
                 }
             }
+            product.minPrice = currentMinPrice
+            product.maxPrice = currentMaxPrice
+            productRepository.save(product)
         }
     }
 
