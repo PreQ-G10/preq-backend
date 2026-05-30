@@ -28,16 +28,16 @@ interface ProductImageRepository : JpaRepository<ProductImage, Long> {
 
     @Query(
         value = """
-            SELECT pi.* -- Select all columns for ProductImage entity
+            SELECT pi.*
             FROM product_image pi
             WHERE pi.product_id = :productId
-            AND pi.embedding IS NOT NULL
-            AND pi.status = 'PENDING_REVIEW' -- Changed from 'PENDING' to 'PENDING_REVIEW' based on ProductImageStatus enum
-            AND pi.user_id IS NOT NULL
-            AND pi.user_id != :current_user
-            AND pi.created_at >= NOW() - INTERVAL '1 year' -- Added filter for images created within the last year
-            AND (1 - (pi.embedding <=> CAST(:newEmbedding AS vector))) >= 0.8
-            ORDER BY (1 - (pi.embedding <=> CAST(:newEmbedding AS vector))) DESC -- Order by similarity
+                AND pi.embedding IS NOT NULL
+                AND pi.status = 'PENDING_REVIEW'
+                AND pi.user_id IS NOT NULL
+                AND pi.user_id != :current_user
+                AND pi.created_at >= NOW() - INTERVAL '1 year'
+                AND (1 - (pi.embedding <=> CAST(:newEmbedding AS vector))) >= 0.8
+            ORDER BY (1 - (pi.embedding <=> CAST(:newEmbedding AS vector))) DESC
             LIMIT 3
         """,
         nativeQuery = true,
