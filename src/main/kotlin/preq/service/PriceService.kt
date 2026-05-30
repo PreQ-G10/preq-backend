@@ -60,6 +60,9 @@ class PriceService(
                 user.recoveryMultiplier *= 0.5
             }
             userRepository.save(user)
+
+            product.updateMinMaxPrice(request.price)
+            productRepository.save(product)
         }
 
         return locationProductPriceRepository.save(
