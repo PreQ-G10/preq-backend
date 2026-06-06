@@ -10,7 +10,6 @@ import preq.web.dto.projection.LocationPriceResult
 import preq.web.dto.projection.NearbyOfferResult
 import preq.web.dto.projection.PriceStats
 import preq.web.dto.projection.TopLocationResult
-import preq.web.dto.response.LocationProductPriceResponse
 import java.math.BigDecimal
 
 @Repository

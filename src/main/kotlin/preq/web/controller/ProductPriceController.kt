@@ -80,6 +80,6 @@ class ProductPriceController(
     @GetMapping("/{productId}/{locationId}")
     fun getPriceReportsFromLocation(
         @PathVariable productId: Long,
-        @PathVariable locationId: Long
+        @PathVariable locationId: Long,
     ): List<LocationProductPriceResponse> = priceService.getPricesFromLocation(productId, locationId)
 }
