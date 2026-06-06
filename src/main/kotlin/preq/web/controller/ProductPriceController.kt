@@ -76,4 +76,10 @@ class ProductPriceController(
         @RequestParam longitude: Double,
         @RequestParam radius: Double,
     ): List<HeatmapPointResponse> = heatmapService.getHeatmapDataForProduct(productId, latitude, longitude, radius)
+
+    @GetMapping("/{productId}/{locationId}")
+    fun getPriceReportsFromLocation(
+        @PathVariable productId: Long,
+        @PathVariable locationId: Long
+    ): List<LocationProductPriceResponse> = priceService.getPricesFromLocation(productId, locationId)
 }

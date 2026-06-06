@@ -23,6 +23,7 @@ data class PriceSummaryResponse(
             topLocations =
                 topLocations.map {
                     TopLocationResponse(
+                        id = it.getId(),
                         name = it.getName(),
                         address = it.getAddress(),
                         avgPrice = it.getAvgPrice(),
