@@ -251,7 +251,8 @@ class PriceService(
 
     fun getPricesFromLocation(
         productId: Long,
-        locationId: Long): List<LocationProductPriceResponse> =
+        locationId: Long,
+    ): List<LocationProductPriceResponse> =
         locationProductPriceRepository
             .getLocationPricesForProductInLocation(productId, locationId)
             .map { LocationProductPriceResponse.from(it) }
