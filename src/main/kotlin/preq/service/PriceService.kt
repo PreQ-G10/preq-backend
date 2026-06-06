@@ -16,6 +16,7 @@ import preq.repository.UserRepository
 import preq.web.dto.request.DisputePriceRequest
 import preq.web.dto.request.ReportProductPriceRequest
 import preq.web.dto.response.ConfirmPriceResponse
+import preq.web.dto.response.LocationProductPriceResponse
 import preq.web.dto.response.PendingValidationResponse
 import preq.web.dto.response.PriceSummaryResponse
 import java.time.LocalDateTime
@@ -247,4 +248,11 @@ class PriceService(
         }
         return if (totalWeight == 0.0) 0.0 else weightedSum / totalWeight
     }
+
+    fun getPricesFromLocation(
+        productId: Long,
+        locationId: Long): List<LocationProductPriceResponse> =
+        locationProductPriceRepository
+            .getLocationPricesForProductInLocation(productId, locationId)
+            .map { LocationProductPriceResponse.from(it) }
 }

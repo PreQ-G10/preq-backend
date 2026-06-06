@@ -10,6 +10,7 @@ import preq.web.dto.projection.LocationPriceResult
 import preq.web.dto.projection.NearbyOfferResult
 import preq.web.dto.projection.PriceStats
 import preq.web.dto.projection.TopLocationResult
+import preq.web.dto.response.LocationProductPriceResponse
 import java.math.BigDecimal
 
 @Repository
@@ -34,7 +35,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
 
     @Query(
         value = """
-            SELECT l.name, l.address, AVG(lpp.price) as avgPrice, COUNT(*) as reportCount
+            SELECT l.id as id, l.name, l.address, AVG(lpp.price) as avgPrice, COUNT(*) as reportCount
             FROM location_product_price lpp
             JOIN location l ON l.id = lpp.location_id
             JOIN users u ON u.id = lpp.user_id
@@ -239,4 +240,21 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("thresholdFraction") thresholdFraction: BigDecimal,
         @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<NearbyOfferResult>
+
+    @Query(
+        """
+            SELECT lpp.* FROM location_product_price lpp
+            JOIN location l ON l.id = lpp.location_id
+            WHERE lpp.product_id = :productId
+                AND l.id = :locationId
+                AND lpp.score >= :validThreshold
+            ORDER BY lpp.reported_at DESC
+        """,
+        nativeQuery = true,
+    )
+    fun getLocationPricesForProductInLocation(
+        @Param("productId") productId: Long,
+        @Param("locationId") locationId: Long,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
+    ): List<LocationProductPrice>
 }
