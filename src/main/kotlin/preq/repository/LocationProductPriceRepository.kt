@@ -193,7 +193,6 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("validMin") validMin: Double = ReportScore.VALID_MIN,
     ): List<LocationProductPrice>
 
-
     @Query(
         value = """
             SELECT 

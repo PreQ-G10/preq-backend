@@ -12,27 +12,30 @@ data class NearbyOfferResponse(
     val averagePrice: BigDecimal,
 ) {
     companion object {
-        fun from(r: NearbyOfferResult) = NearbyOfferResponse(
-            product = ProductResponse(
-                id = r.getProductId(),
-                name = r.getProductName(),
-                brand = r.getProductBrand(),
-                quantity = r.getProductQuantity(),
-                quantityType = r.getProductQuantityType(),
-                minPrice = r.getProductMinPrice(),
-                maxPrice = r.getProductMaxPrice(),
-                barcode = r.getProductBarcode(),
-                images = emptyList(),
-            ),
-            location = LocationResponse(
-                id = r.getLocationId(),
-                name = r.getLocationName(),
-                address = r.getLocationAddress(),
-                type = LocationType.valueOf(r.getLocationType()),
-            ),
-            distanceMeters = r.getDistanceMeters(),
-            price = r.getMinPrice(),
-            averagePrice = r.getAvgPrice(),
-        )
+        fun from(r: NearbyOfferResult) =
+            NearbyOfferResponse(
+                product =
+                    ProductResponse(
+                        id = r.getProductId(),
+                        name = r.getProductName(),
+                        brand = r.getProductBrand(),
+                        quantity = r.getProductQuantity(),
+                        quantityType = r.getProductQuantityType(),
+                        minPrice = r.getProductMinPrice(),
+                        maxPrice = r.getProductMaxPrice(),
+                        barcode = r.getProductBarcode(),
+                        images = emptyList(),
+                    ),
+                location =
+                    LocationResponse(
+                        id = r.getLocationId(),
+                        name = r.getLocationName(),
+                        address = r.getLocationAddress(),
+                        type = LocationType.valueOf(r.getLocationType()),
+                    ),
+                distanceMeters = r.getDistanceMeters(),
+                price = r.getMinPrice(),
+                averagePrice = r.getAvgPrice(),
+            )
     }
 }
