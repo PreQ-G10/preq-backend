@@ -9,16 +9,22 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 interface ProductFieldContestRepository : JpaRepository<ProductFieldContest, Long> {
-    fun countByProductIdAndFieldTypeAndFieldValue(productId: Long, fieldType: FieldType, fieldValue: String): Long
+    fun countByProductIdAndFieldTypeAndFieldValue(
+        productId: Long,
+        fieldType: FieldType,
+        fieldValue: String,
+    ): Long
 
-    @Query("""
+    @Query(
+        """
     SELECT COUNT(pfc) > 0
     FROM ProductFieldContest pfc
     WHERE pfc.product.id = :productId
       AND pfc.user.id = :userId
       AND pfc.fieldType = :fieldType
       AND pfc.createdAt >= :since
-""")
+""",
+    )
     fun existsRecentByProductIdAndUserIdAndFieldType(
         productId: Long,
         userId: Long,
