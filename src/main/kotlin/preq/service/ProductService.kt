@@ -1,6 +1,6 @@
 package preq.service
 
-import preq.web.dto.response.NearbyOfferResponse
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -13,6 +13,7 @@ import preq.model.Product
 import preq.model.ProductFieldContest
 import preq.model.ProductImage
 import preq.model.User
+import preq.repository.LocationProductPriceRepository
 import preq.repository.ProductFieldContestRepository
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
@@ -20,11 +21,10 @@ import preq.util.mapper.ProductMapper
 import preq.web.dto.request.ContestProductFieldRequest
 import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
+import preq.web.dto.response.NearbyOfferResponse
+import preq.web.dto.response.NearbyOffersResponse
 import preq.web.dto.response.ProductDetectionResponse
 import preq.web.dto.response.ProductResponse
-import jakarta.persistence.EntityNotFoundException
-import preq.repository.LocationProductPriceRepository
-import preq.web.dto.response.NearbyOffersResponse
 import java.math.BigDecimal
 
 @Service
@@ -260,7 +260,6 @@ class ProductService(
         field: ContestProductFieldRequest,
         user: User,
     ): FieldContestStatus {
-
         val contestAlreadyExists =
             contestRepository.existsRecentByProductIdAndUserIdAndFieldType(
                 productId,
@@ -271,19 +270,20 @@ class ProductService(
             return FieldContestStatus.ALREADY_SUBMITTED
         }
 
-        val product = productRepository.findById(productId)
-            .orElseThrow { EntityNotFoundException("Product $productId not found") }
-
+        val product =
+            productRepository
+                .findById(productId)
+                .orElseThrow { EntityNotFoundException("Product $productId not found") }
 
         val field =
             contestRepository.save(
                 ProductFieldContest().apply
-                {
-                            this.product = product
-                            this.user = user
-                            this.fieldType = field.fieldType
-                            this.fieldValue = field.fieldValue
-                },
+                    {
+                        this.product = product
+                        this.user = user
+                        this.fieldType = field.fieldType
+                        this.fieldValue = field.fieldValue
+                    },
             )
 
         contestCurrentField(product, field)
@@ -295,9 +295,12 @@ class ProductService(
         product: Product,
         field: ProductFieldContest,
     ) {
-        val voteCount = contestRepository.countByProductIdAndFieldTypeAndFieldValue(
-            product.id, field.fieldType, field.fieldValue,
-        )
+        val voteCount =
+            contestRepository.countByProductIdAndFieldTypeAndFieldValue(
+                product.id,
+                field.fieldType,
+                field.fieldValue,
+            )
         if (voteCount < minimumFieldContestVotesRequired) return
 
         val normalizedValue = normalizeValue(field.fieldType, field.fieldValue)
@@ -333,12 +336,14 @@ class ProductService(
     fun getNearbyOffers(user: User): NearbyOffersResponse {
         requireNotNull(user.addressLocation) { "User has no location set" }
 
-        val offers = locationProductPriceRepository.findNearbyOffers(
-            userLat = user.addressLocation!!.y,
-            userLng = user.addressLocation!!.x,
-            radiusMeters = radiusMeters,
-            thresholdFraction = discountThreshold,
-        ).map { NearbyOfferResponse.from(it) }
+        val offers =
+            locationProductPriceRepository
+                .findNearbyOffers(
+                    userLat = user.addressLocation!!.y,
+                    userLng = user.addressLocation!!.x,
+                    radiusMeters = radiusMeters,
+                    thresholdFraction = discountThreshold,
+                ).map { NearbyOfferResponse.from(it) }
 
         return NearbyOffersResponse(offers)
     }

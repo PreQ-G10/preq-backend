@@ -83,7 +83,5 @@ class ProductController(
     ): FieldContestStatus = productService.contestField(id, field, user(principal))
 
     @GetMapping("/offers-nearby")
-    fun getNearbyOffers(principal: Principal): NearbyOffersResponse {
-        return productService.getNearbyOffers(user(principal))
-    }
+    fun getNearbyOffers(principal: Principal): NearbyOffersResponse = productService.getNearbyOffers(user(principal))
 }
