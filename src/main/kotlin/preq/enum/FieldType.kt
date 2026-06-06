@@ -5,4 +5,5 @@ enum class FieldType {
     NAME,
     QUANTITY,
     QUANTITY_TYPE,
+    BARCODE,
 }

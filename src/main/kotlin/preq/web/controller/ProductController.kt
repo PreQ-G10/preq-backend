@@ -16,6 +16,7 @@ import preq.service.ProductService
 import preq.web.dto.request.ContestProductFieldRequest
 import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
+import preq.web.dto.response.NearbyOffersResponse
 import preq.web.dto.response.ProductResponse
 import java.security.Principal
 
@@ -80,4 +81,9 @@ class ProductController(
         @RequestBody field: ContestProductFieldRequest,
         principal: Principal,
     ): FieldContestStatus = productService.contestField(id, field, user(principal))
+
+    @GetMapping("/offers-nearby")
+    fun getNearbyOffers(principal: Principal): NearbyOffersResponse {
+        return productService.getNearbyOffers(user(principal))
+    }
 }

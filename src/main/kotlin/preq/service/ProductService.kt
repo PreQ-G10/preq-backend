@@ -1,5 +1,6 @@
 package preq.service
 
+import preq.web.dto.response.NearbyOfferResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -21,10 +22,15 @@ import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.ProductDetectionResponse
 import preq.web.dto.response.ProductResponse
+import jakarta.persistence.EntityNotFoundException
+import preq.repository.LocationProductPriceRepository
+import preq.web.dto.response.NearbyOffersResponse
+import java.math.BigDecimal
 
 @Service
 class ProductService(
     private val productRepository: ProductRepository,
+    private val locationProductPriceRepository: LocationProductPriceRepository,
     private val productImageRepository: ProductImageRepository,
     private val imageEmbeddingService: ImageEmbeddingService,
     private val cloudinaryService: CloudinaryService,
@@ -33,6 +39,9 @@ class ProductService(
     private val contestRepository: ProductFieldContestRepository,
     private val confidenceThreshold: Double = 0.78,
     @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
+    @Value("3") private val minimumFieldContestVotesRequired: Double,
+    @Value("\${offers.nearby.radius-meters:5000.0}") private val radiusMeters: Double = 5000.0,
+    @Value("\${offers.nearby.discount-threshold:0.05}") private val discountThreshold: BigDecimal = BigDecimal("0.05"),
 ) {
     val productMapper = ProductMapper
 
@@ -251,41 +260,47 @@ class ProductService(
         field: ContestProductFieldRequest,
         user: User,
     ): FieldContestStatus {
+
         val contestAlreadyExists =
-            contestRepository.existsByProductIdAndUserIdAndFieldType(
+            contestRepository.existsRecentByProductIdAndUserIdAndFieldType(
                 productId,
                 user.id,
                 field.fieldType,
             )
-        print(contestAlreadyExists)
         if (contestAlreadyExists) {
             return FieldContestStatus.ALREADY_SUBMITTED
-        } else {
-            val product = productRepository.findById(productId).orElseThrow()
+        }
 
-            val field =
-                contestRepository.save(
-                    ProductFieldContest().apply
-                        {
+        val product = productRepository.findById(productId)
+            .orElseThrow { EntityNotFoundException("Product $productId not found") }
+
+
+        val field =
+            contestRepository.save(
+                ProductFieldContest().apply
+                {
                             this.product = product
                             this.user = user
                             this.fieldType = field.fieldType
                             this.fieldValue = field.fieldValue
-                        },
-                )
+                },
+            )
 
-            contestCurrentField(product, field)
+        contestCurrentField(product, field)
 
-            return FieldContestStatus.FIRST_SUBMIT
-        }
+        return FieldContestStatus.FIRST_SUBMIT
     }
 
     private fun contestCurrentField(
         product: Product,
         field: ProductFieldContest,
     ) {
-        val normalizedValue = normalizeValue(field.fieldType, field.fieldValue)
+        val voteCount = contestRepository.countByProductIdAndFieldTypeAndFieldValue(
+            product.id, field.fieldType, field.fieldValue,
+        )
+        if (voteCount < minimumFieldContestVotesRequired) return
 
+        val normalizedValue = normalizeValue(field.fieldType, field.fieldValue)
         val bestContest = contestRepository.getMostVotedValue(product.id, field.fieldType)
 
         if (normalizedValue != bestContest) return
@@ -295,6 +310,7 @@ class ProductService(
             FieldType.NAME -> product.name = field.fieldValue
             FieldType.QUANTITY -> product.quantity = field.fieldValue.toBigDecimal()
             FieldType.QUANTITY_TYPE -> product.quantityType = field.fieldValue
+            FieldType.BARCODE -> product.barcode = field.fieldValue
         }
 
         productRepository.save(product)
@@ -309,7 +325,21 @@ class ProductService(
             FieldType.NAME -> value.trim()
             FieldType.QUANTITY -> value.toDouble().toString()
             FieldType.QUANTITY_TYPE -> value.trim()
+            FieldType.BARCODE -> value.toInt().toString()
         }
 
     fun searchByName(name: String): List<Product> = productRepository.searchByName(name)
+
+    fun getNearbyOffers(user: User): NearbyOffersResponse {
+        requireNotNull(user.addressLocation) { "User has no location set" }
+
+        val offers = locationProductPriceRepository.findNearbyOffers(
+            userLat = user.addressLocation!!.y,
+            userLng = user.addressLocation!!.x,
+            radiusMeters = radiusMeters,
+            thresholdFraction = discountThreshold,
+        ).map { NearbyOfferResponse.from(it) }
+
+        return NearbyOffersResponse(offers)
+    }
 }

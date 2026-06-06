@@ -22,6 +22,7 @@ import preq.exceptions.ExternalApiException
 import preq.model.Product
 import preq.model.ProductImage
 import preq.model.User
+import preq.repository.LocationProductPriceRepository
 import preq.repository.ProductFieldContestRepository
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
@@ -40,6 +41,7 @@ import kotlin.math.roundToInt
 
 class ProductServiceTest {
     private val productRepository: ProductRepository = mock()
+    private val locationProductPriceRepository: LocationProductPriceRepository = mock()
     private val productImageRepository: ProductImageRepository = mock()
     private val imageEmbeddingService: ImageEmbeddingService = mock()
     private val cloudinaryService: CloudinaryService = mock()
@@ -49,6 +51,7 @@ class ProductServiceTest {
     private val service =
         ProductService(
             productRepository,
+            locationProductPriceRepository,
             productImageRepository,
             imageEmbeddingService,
             cloudinaryService,
@@ -56,6 +59,9 @@ class ProductServiceTest {
             userService,
             contestRepository,
             minimumTrustScore = 0.8,
+            minimumFieldContestVotesRequired = 3.0,
+            radiusMeters = 5000.0,
+            discountThreshold = BigDecimal("0.05"),
         )
 
     private val mockFile = MockMultipartFile("file", "img.jpg", "image/jpeg", byteArrayOf(1, 2, 3))
