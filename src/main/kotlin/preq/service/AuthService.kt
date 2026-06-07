@@ -26,8 +26,6 @@ class AuthService(
             throw IllegalArgumentException("Email already registered")
         }
 
-        print(request)
-
         val user =
             User().apply {
                 this.name = request.name

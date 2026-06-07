@@ -48,6 +48,9 @@ class User : BaseEntity() {
     @Column(name = "trust_score", nullable = false)
     var trustScore: Double = 0.5
 
+    @Column(name = "recovery_multiplier", nullable = false)
+    var recoveryMultiplier: Double = 1.0
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var role: UserRole = UserRole.USER

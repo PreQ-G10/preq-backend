@@ -35,10 +35,61 @@ class Product : BaseEntity() {
     @Column
     var quantityType: String = ""
 
+    @Column(precision = 10, scale = 2)
+    var minPrice: BigDecimal? = null
+
+    @Column(precision = 10, scale = 2)
+    var maxPrice: BigDecimal? = null
+
     @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val images: MutableList<ProductImage> = mutableListOf()
+
+    @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val consensusImages: MutableList<ProductImage> = mutableListOf()
 
     fun approvedImages() = images.filter { it.status == ProductImageStatus.APPROVED }
 
     fun hasBarcode() = barcode != null
+
+    fun updateMinMaxPrice(price: BigDecimal) {
+        if (minPrice == null || price < minPrice!!) {
+            minPrice = price
+        }
+        if (maxPrice == null || price > maxPrice!!) {
+            maxPrice = price
+        }
+    }
+
+    fun compareInConsensus(embedding: FloatArray): Boolean {
+        if (consensusImages.size != 3) return false
+        return consensusImages.all { image ->
+            cosineSimilarity(embedding, image.embedding ?: floatArrayOf()) >= 0.8
+        }
+    }
+
+    private fun cosineSimilarity(
+        a: FloatArray,
+        b: FloatArray,
+    ): Float {
+        if (a.size != b.size) {
+            return 0f
+        }
+
+        var dot = 0f
+        var normA = 0f
+        var normB = 0f
+
+        for (i in a.indices) {
+            dot += a[i] * b[i]
+            normA += a[i] * a[i]
+            normB += b[i] * b[i]
+        }
+
+        return (
+            dot / (
+                kotlin.math.sqrt(normA) *
+                    kotlin.math.sqrt(normB)
+            )
+        )
+    }
 }

@@ -21,6 +21,7 @@ class CartService(
     private val locationProductPriceRepository: LocationProductPriceRepository,
     private val productRepository: ProductRepository,
     @Value("\${preq.cart.nearby-radius-meters:10000}") private val nearbyRadiusMeters: Double,
+    @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
 ) {
     data class ProductPriceData(
         val productName: String,
@@ -55,10 +56,10 @@ class CartService(
             .mapNotNull { item ->
                 val product = productRepository.findById(item.productId).orElse(null)
                 val productName = product?.name ?: "Producto ${item.productId}"
-                val globalAvg = locationProductPriceRepository.getGlobalAvgPrice(item.productId)
+                val globalAvg = locationProductPriceRepository.getGlobalAvgPrice(item.productId, minimumTrustScore)
                 val byLocation =
                     locationProductPriceRepository
-                        .getLocationPricesForProduct(item.productId)
+                        .getLocationPricesForProduct(item.productId, minimumTrustScore)
                         .associate { it.getLocationId() to it.getAvgPrice() }
                 item.productId to ProductPriceData(productName, globalAvg, byLocation)
             }.toMap()
@@ -66,7 +67,7 @@ class CartService(
     private fun buildLocationMeta(productIds: Set<Long>): Map<Long, LocationMeta> {
         val locationMetaById = mutableMapOf<Long, LocationMeta>()
         productIds.forEach { productId ->
-            locationProductPriceRepository.getLocationPricesForProduct(productId).forEach {
+            locationProductPriceRepository.getLocationPricesForProduct(productId, minimumTrustScore).forEach {
                 locationMetaById.putIfAbsent(
                     it.getLocationId(),
                     LocationMeta(it.getName(), it.getAddress(), it.getLatitude(), it.getLongitude()),

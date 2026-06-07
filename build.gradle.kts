@@ -6,7 +6,7 @@ plugins {
     id("jacoco")
 }
 
-extra["tomcat.version"] = "10.1.54"
+extra["tomcat.version"] = "10.1.55"
 extra["netty.version"] = "4.2.13.Final"
 extra["spring-security.version"] = "6.5.9"
 

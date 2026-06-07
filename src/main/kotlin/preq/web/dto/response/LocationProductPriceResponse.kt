@@ -1,5 +1,6 @@
 package preq.web.dto.response
 
+import preq.enum.ReportScore
 import preq.model.LocationProductPrice
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -10,6 +11,8 @@ data class LocationProductPriceResponse(
     val locationId: Long,
     val price: BigDecimal,
     val reportedAt: LocalDateTime,
+    val score: Double,
+    val reportScore: ReportScore,
 ) {
     companion object {
         fun from(price: LocationProductPrice) =
@@ -19,6 +22,8 @@ data class LocationProductPriceResponse(
                 locationId = price.location!!.id,
                 price = price.price,
                 reportedAt = price.reportedAt,
+                score = price.score,
+                reportScore = price.reportScore,
             )
     }
 }

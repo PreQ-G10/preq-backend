@@ -38,3 +38,21 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration-ms: 900000
   refresh-token-expiration-ms: 604800000
+
+preq:
+  prices:
+    threshold-percentage: 0.40
+    proximity-meters: 200.0
+    cold-start-minimum-reports: 3
+    pending-validation-deviation-min: 0.10
+    pending-validation-deviation-max: 0.20
+  trust:
+    minimum-score: 0.25
+    recovery-per-report: 0.01
+    fixed-penalty: 0.05
+  embeddings:
+    consensus-size: 3
+    similarity-threshold: 0.78
+    expiry-days: 365
+  disputes:
+    required: 3

@@ -25,6 +25,10 @@ class ProductImage : BaseEntity() {
     @NotNull
     var product: Product? = null
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    var user: User? = null
+
     @NotBlank
     @Pattern(regexp = "^https://res\\.cloudinary\\.com/.*", message = "Image URL must be a valid Cloudinary URL")
     var imageUrl: String = ""
