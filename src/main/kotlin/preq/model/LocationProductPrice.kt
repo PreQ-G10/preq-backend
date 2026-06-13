@@ -13,6 +13,8 @@ import preq.enum.ReportScore
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.exp
+import kotlin.math.pow
 
 @Entity
 @Table(name = "location_product_price")
@@ -48,4 +50,50 @@ class LocationProductPrice : BaseEntity() {
         get() = ReportScore.fromScore(score)
 
     fun ageInDays() = ChronoUnit.DAYS.between(reportedAt, LocalDateTime.now())
+
+    fun applyDisputePenalty(deviation: Double) {
+        score = (score - deviation * 0.3).coerceIn(0.0, 1.0)
+    }
+
+    fun applyConfirmationBoost(confirmerTrustScore: Double) {
+        score = (score + (1 - score) * confirmerTrustScore * 0.3).coerceIn(0.0, 1.0)
+    }
+
+    companion object {
+        fun computeInflationAdjustedPrice(
+            prices: List<LocationProductPrice>,
+            monthlyInflationRate: Double,
+        ): Double? {
+            if (prices.isEmpty()) return null
+            val decayFactor = 0.01
+            var weightedSum = 0.0
+            var totalWeight = 0.0
+            prices.forEach { report ->
+                val inflatedPrice = report.price.toDouble() * (1 + monthlyInflationRate).pow(report.ageInDays() / 30.0)
+                val weight = exp(-decayFactor * report.ageInDays()) * report.locationConfidence
+                weightedSum += inflatedPrice * weight
+                totalWeight += weight
+            }
+            return if (totalWeight == 0.0) null else weightedSum / totalWeight
+        }
+
+        fun computeInitialScore(
+            locationConfidence: Double,
+            userTrustScore: Double,
+            deviationPenalty: Double,
+        ): Double = (locationConfidence * (0.5 + userTrustScore * 0.5) * (1 - deviationPenalty * 0.3)).coerceIn(0.0, 1.0)
+
+        fun computeDecayWeightedPrice(prices: List<LocationProductPrice>): Double? {
+            if (prices.isEmpty()) return null
+            val decayFactor = 0.01
+            var weightedSum = 0.0
+            var totalWeight = 0.0
+            prices.forEach { report ->
+                val weight = exp(-decayFactor * report.ageInDays()) * report.locationConfidence
+                weightedSum += report.price.toDouble() * weight
+                totalWeight += weight
+            }
+            return if (totalWeight == 0.0) null else weightedSum / totalWeight
+        }
+    }
 }

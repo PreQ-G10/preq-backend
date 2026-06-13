@@ -23,6 +23,9 @@ import preq.repository.UserRepository
 import preq.service.JwtService
 import preq.service.ProductService
 import preq.web.controller.ProductController
+import preq.web.dto.response.ProductResponse
+import preq.web.dto.response.ProductSearchWithPriceResponse
+import java.math.BigDecimal
 import java.security.Principal
 import java.util.Optional
 
@@ -63,19 +66,27 @@ class ProductControllerTest {
 
     @Test
     fun `GET search returns matching products`() {
-        val products =
-            listOf(
-                Product().apply {
-                    name = "Pasta de Maní"
-                    brand = "Maní King"
-                },
+        val response =
+            ProductSearchWithPriceResponse(
+                product =
+                    ProductResponse(
+                        id = 1L,
+                        name = "Pasta de Maní",
+                        brand = "Maní King",
+                        quantity = BigDecimal.ONE,
+                        quantityType = "kg",
+                        barcode = null,
+                        images = emptyList(),
+                    ),
+                maxPrice = 1500.0,
+                minPrice = 800.0,
             )
-        whenever(productService.searchByName("maní")).thenReturn(products)
+        whenever(productService.searchByName("maní")).thenReturn(listOf(response))
 
         mockMvc
             .perform(get("/api/products/search").param("name", "maní"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$[0].name").value("Pasta de Maní"))
+            .andExpect(jsonPath("$[0].product.name").value("Pasta de Maní"))
     }
 
     @Test

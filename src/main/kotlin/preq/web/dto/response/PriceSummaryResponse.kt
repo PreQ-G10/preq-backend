@@ -8,6 +8,7 @@ data class PriceSummaryResponse(
     val maxPrice: Double?,
     val minPrice: Double?,
     val weightedPrice: Double?,
+    val weightedByConfidencePrice: Double?,
     val topLocations: List<TopLocationResponse>,
 ) {
     companion object {
@@ -15,11 +16,13 @@ data class PriceSummaryResponse(
             stats: PriceStats,
             topLocations: List<TopLocationResult>,
             weightedPrice: Double?,
+            weightedByConfidencePrice: Double?,
         ) = PriceSummaryResponse(
             avgPrice = stats.getAvgPrice(),
             maxPrice = stats.getMaxPrice(),
             minPrice = stats.getMinPrice(),
             weightedPrice = weightedPrice,
+            weightedByConfidencePrice = weightedByConfidencePrice,
             topLocations =
                 topLocations.map {
                     TopLocationResponse(

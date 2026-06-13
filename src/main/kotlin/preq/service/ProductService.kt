@@ -25,6 +25,7 @@ import preq.web.dto.response.NearbyOfferResponse
 import preq.web.dto.response.NearbyOffersResponse
 import preq.web.dto.response.ProductDetectionResponse
 import preq.web.dto.response.ProductResponse
+import preq.web.dto.response.ProductSearchWithPriceResponse
 import java.math.BigDecimal
 
 @Service
@@ -101,8 +102,6 @@ class ProductService(
                         brand = apiProductMapped.brand,
                         quantity = apiProductMapped.quantity,
                         quantityType = apiProductMapped.quantityType,
-                        minPrice = null,
-                        maxPrice = null,
                         barcode = barcode,
                         images = apiProductMapped.images.map { it.imageUrl },
                     ),
@@ -331,7 +330,19 @@ class ProductService(
             FieldType.BARCODE -> value.toInt().toString()
         }
 
-    fun searchByName(name: String): List<Product> = productRepository.searchByName(name)
+    fun searchByName(name: String): List<ProductSearchWithPriceResponse> {
+        val results =
+            productRepository
+                .searchByNameWithPrice(name)
+                .map { row ->
+                    ProductSearchWithPriceResponse(
+                        product = ProductResponse.from(row[0] as Product),
+                        maxPrice = row[1].toString().toDouble(),
+                        minPrice = row[2].toString().toDouble(),
+                    )
+                }
+        return results
+    }
 
     fun getNearbyOffers(user: User): NearbyOffersResponse {
         requireNotNull(user.addressLocation) { "User has no location set" }

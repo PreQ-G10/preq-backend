@@ -46,6 +46,7 @@ preq:
     cold-start-minimum-reports: 3
     pending-validation-deviation-min: 0.10
     pending-validation-deviation-max: 0.20
+    average-monthly-inflation: 0.03
   trust:
     minimum-score: 0.25
     recovery-per-report: 0.01

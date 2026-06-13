@@ -14,10 +14,6 @@ interface NearbyOfferResult {
 
     fun getProductQuantityType(): String
 
-    fun getProductMinPrice(): BigDecimal?
-
-    fun getProductMaxPrice(): BigDecimal?
-
     fun getProductBarcode(): String?
 
     // location
