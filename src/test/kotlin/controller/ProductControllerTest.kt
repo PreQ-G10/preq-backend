@@ -40,6 +40,12 @@ class ProductControllerTest {
     lateinit var productService: ProductService
 
     @MockitoBean
+    lateinit var jwtService: JwtService
+
+    @MockitoBean
+    lateinit var userDetailsService: UserDetailsService
+
+    @MockitoBean
     lateinit var userRepository: UserRepository
 
     lateinit var principal: Principal
