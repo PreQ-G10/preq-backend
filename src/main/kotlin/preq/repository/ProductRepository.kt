@@ -12,7 +12,8 @@ import java.math.BigDecimal
 interface ProductRepository : JpaRepository<Product, Long> {
     fun findByBarcode(barcode: String): Product?
 
-    @Query("""
+    @Query(
+        """
         SELECT p,
            MAX(lpp.price) AS maxPrice,
            MIN(lpp.price) AS minPrice
@@ -23,7 +24,8 @@ interface ProductRepository : JpaRepository<Product, Long> {
             OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :name, '%'))
         ) AND lpp.score >= :validThreshold
         GROUP BY p
-    """)
+    """,
+    )
     fun searchByNameWithPrice(
         @Param("name") name: String,
         @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,

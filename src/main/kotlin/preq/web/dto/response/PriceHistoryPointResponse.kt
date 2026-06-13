@@ -7,7 +7,10 @@ data class PriceHistoryPointResponse(
     val avgPrice: Double,
 ) {
     companion object {
-        fun from(weekStart: LocalDate, avgPrice: Double) = PriceHistoryPointResponse(
+        fun from(
+            weekStart: LocalDate,
+            avgPrice: Double,
+        ) = PriceHistoryPointResponse(
             weekStart = weekStart.toString(),
             avgPrice = avgPrice,
         )

@@ -60,7 +60,10 @@ class LocationProductPrice : BaseEntity() {
     }
 
     companion object {
-        fun computeInflationAdjustedPrice(prices: List<LocationProductPrice>, monthlyInflationRate: Double): Double? {
+        fun computeInflationAdjustedPrice(
+            prices: List<LocationProductPrice>,
+            monthlyInflationRate: Double,
+        ): Double? {
             if (prices.isEmpty()) return null
             val decayFactor = 0.01
             var weightedSum = 0.0
@@ -74,8 +77,11 @@ class LocationProductPrice : BaseEntity() {
             return if (totalWeight == 0.0) null else weightedSum / totalWeight
         }
 
-        fun computeInitialScore(locationConfidence: Double, userTrustScore: Double, deviationPenalty: Double): Double =
-            (locationConfidence * (0.5 + userTrustScore * 0.5) * (1 - deviationPenalty * 0.3)).coerceIn(0.0, 1.0)
+        fun computeInitialScore(
+            locationConfidence: Double,
+            userTrustScore: Double,
+            deviationPenalty: Double,
+        ): Double = (locationConfidence * (0.5 + userTrustScore * 0.5) * (1 - deviationPenalty * 0.3)).coerceIn(0.0, 1.0)
 
         fun computeDecayWeightedPrice(prices: List<LocationProductPrice>): Double? {
             if (prices.isEmpty()) return null

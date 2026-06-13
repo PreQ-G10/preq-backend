@@ -51,7 +51,7 @@ class PriceServiceTest {
             proximityMeters = 200.0,
             coldStartMinimumReports = 3,
             minimumTrustScore = 0.25,
-            averageMonthlyInflation = 0.03
+            averageMonthlyInflation = 0.03,
         )
 
     // ─────────────────────────────────────────────────────────
@@ -757,7 +757,7 @@ class PriceServiceTest {
             listOf(
                 priceEntry(BigDecimal("20.00"), daysAgo = 0),
                 priceEntry(BigDecimal("40.00"), daysAgo = 0),
-            )
+            ),
         )
 
         val result = service.getPriceSummary(1L)

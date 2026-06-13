@@ -56,7 +56,10 @@ class User : BaseEntity() {
     @Column(nullable = false)
     var role: UserRole = UserRole.USER
 
-    fun adjustTrustScore(delta: Double, threshold: Double) {
+    fun adjustTrustScore(
+        delta: Double,
+        threshold: Double,
+    ) {
         val wasAboveThreshold = trustScore >= threshold
         trustScore = (trustScore + delta).coerceIn(0.0, 1.0)
         if (wasAboveThreshold && trustScore < threshold) {
@@ -66,7 +69,11 @@ class User : BaseEntity() {
 
     fun canValidatePrices(threshold: Double) = trustScore >= threshold
 
-    fun applyPricePenaltyIfNeeded(deviation: Double, priceThreshold: Double, trustThreshold: Double): Boolean {
+    fun applyPricePenaltyIfNeeded(
+        deviation: Double,
+        priceThreshold: Double,
+        trustThreshold: Double,
+    ): Boolean {
         if (abs(deviation) <= priceThreshold) return false
         val penalty = deviation * deviation
         adjustTrustScore(-penalty, trustThreshold)

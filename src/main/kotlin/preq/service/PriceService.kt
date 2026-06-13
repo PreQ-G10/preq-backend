@@ -228,7 +228,8 @@ class PriceService(
 
     fun getPriceHistory(productId: Long): List<PriceHistoryPointResponse> {
         val since = LocalDateTime.now().minus(180, ChronoUnit.DAYS)
-        return locationProductPriceRepository.findWeeklyAverages(productId, since)
+        return locationProductPriceRepository
+            .findWeeklyAverages(productId, since)
             .map { row ->
                 PriceHistoryPointResponse.from(
                     weekStart = row.getWeekStart().toLocalDate(),

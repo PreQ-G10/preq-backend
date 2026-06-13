@@ -85,6 +85,7 @@ class ProductPriceController(
     ): List<LocationProductPriceResponse> = priceService.getPricesFromLocation(productId, locationId)
 
     @GetMapping("/history/{productId}")
-    fun getPriceHistory(@PathVariable productId: Long): List<PriceHistoryPointResponse> =
-        priceService.getPriceHistory(productId)
+    fun getPriceHistory(
+        @PathVariable productId: Long,
+    ): List<PriceHistoryPointResponse> = priceService.getPriceHistory(productId)
 }

@@ -259,7 +259,8 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<LocationProductPrice>
 
-    @Query("""
+    @Query(
+        """
         SELECT FUNCTION('date_trunc', 'week', lpp.reportedAt) AS weekStart,
            AVG(lpp.price) AS avgPrice
         FROM LocationProductPrice lpp
@@ -268,10 +269,11 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
           AND lpp.score >= :validThreshold
         GROUP BY FUNCTION('date_trunc', 'week', lpp.reportedAt)
         ORDER BY FUNCTION('date_trunc', 'week', lpp.reportedAt) ASC
-    """)
+    """,
+    )
     fun findWeeklyAverages(
         @Param("productId") productId: Long,
         @Param("since") since: LocalDateTime,
-        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<PriceHistoryResult>
 }

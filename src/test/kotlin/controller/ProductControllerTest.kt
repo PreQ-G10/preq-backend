@@ -66,19 +66,21 @@ class ProductControllerTest {
 
     @Test
     fun `GET search returns matching products`() {
-        val response = ProductSearchWithPriceResponse(
-            product = ProductResponse(
-                id = 1L,
-                name = "Pasta de Maní",
-                brand = "Maní King",
-                quantity = BigDecimal.ONE,
-                quantityType = "kg",
-                barcode = null,
-                images = emptyList(),
-            ),
-            maxPrice = 1500.0,
-            minPrice = 800.0,
-        )
+        val response =
+            ProductSearchWithPriceResponse(
+                product =
+                    ProductResponse(
+                        id = 1L,
+                        name = "Pasta de Maní",
+                        brand = "Maní King",
+                        quantity = BigDecimal.ONE,
+                        quantityType = "kg",
+                        barcode = null,
+                        images = emptyList(),
+                    ),
+                maxPrice = 1500.0,
+                minPrice = 800.0,
+            )
         whenever(productService.searchByName("maní")).thenReturn(listOf(response))
 
         mockMvc

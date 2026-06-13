@@ -331,14 +331,16 @@ class ProductService(
         }
 
     fun searchByName(name: String): List<ProductSearchWithPriceResponse> {
-        val results = productRepository.searchByNameWithPrice(name)
-            .map { row ->
-                ProductSearchWithPriceResponse(
-                    product = ProductResponse.from(row[0] as Product),
-                    maxPrice = row[1].toString().toDouble(),
-                    minPrice = row[2].toString().toDouble(),
-                )
-            }
+        val results =
+            productRepository
+                .searchByNameWithPrice(name)
+                .map { row ->
+                    ProductSearchWithPriceResponse(
+                        product = ProductResponse.from(row[0] as Product),
+                        maxPrice = row[1].toString().toDouble(),
+                        minPrice = row[2].toString().toDouble(),
+                    )
+                }
         return results
     }
 
