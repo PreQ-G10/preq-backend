@@ -374,17 +374,20 @@ class ProductServiceTest {
 
     @Test
     fun `searchByName returns matching products`() {
-        whenever(productRepository.searchByName("Leche")).thenReturn(listOf(mockProduct()))
+        val product = mockProduct()
+        whenever(productRepository.searchByNameWithPrice("Leche"))
+            .thenReturn(listOf(arrayOf(product, 1500.0, 800.0)))
 
         val result = service.searchByName("Leche")
 
         assertEquals(1, result.size)
-        assertEquals("Leche", result[0].name)
+        assertEquals("Leche", result[0].product.name)
     }
 
     @Test
     fun `searchByName returns empty list when no matches`() {
-        whenever(productRepository.searchByName("xyz")).thenReturn(emptyList())
+        whenever(productRepository.searchByNameWithPrice("xyz"))
+            .thenReturn(emptyList())
 
         val result = service.searchByName("xyz")
 

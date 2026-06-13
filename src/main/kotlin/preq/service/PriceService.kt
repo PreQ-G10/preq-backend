@@ -18,10 +18,11 @@ import preq.web.dto.request.ReportProductPriceRequest
 import preq.web.dto.response.ConfirmPriceResponse
 import preq.web.dto.response.LocationProductPriceResponse
 import preq.web.dto.response.PendingValidationResponse
+import preq.web.dto.response.PriceHistoryPointResponse
 import preq.web.dto.response.PriceSummaryResponse
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import kotlin.math.abs
-import kotlin.math.exp
 
 @Service
 class PriceService(
@@ -34,6 +35,7 @@ class PriceService(
     @Value("\${preq.prices.proximity-meters}") private val proximityMeters: Double,
     @Value("\${preq.prices.cold-start-minimum-reports}") private val coldStartMinimumReports: Int,
     @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
+    @Value("\${preq.prices.average-monthly-inflation}") private val averageMonthlyInflation: Double,
 ) {
     fun reportPrice(
         request: ReportProductPriceRequest,
@@ -49,20 +51,14 @@ class PriceService(
             }
 
         val allPrices = locationProductPriceRepository.findValidByProductIdOrderByReportedAtDesc(request.productId)
-        val weightedAverage = computeWeightedPrice(allPrices)
+        val weightedAverage = LocationProductPrice.computeInflationAdjustedPrice(allPrices, averageMonthlyInflation)
         val totalReports = locationProductPriceRepository.countValidByProductId(request.productId)
 
         val (locationConfidence, score) = applyIngestionRules(request, user, location, weightedAverage, totalReports)
 
         if (ReportScore.fromScore(score) != ReportScore.INVALID) {
-            val wasAboveThreshold = user.trustScore >= minimumTrustScore
-            user.trustScore = (user.trustScore + 0.01 * user.recoveryMultiplier).coerceIn(0.0, 1.0)
-            if (wasAboveThreshold && user.trustScore < minimumTrustScore) {
-                user.recoveryMultiplier *= 0.5
-            }
+            user.adjustTrustScore(0.01 * user.recoveryMultiplier, minimumTrustScore)
             userRepository.save(user)
-
-            product.updateMinMaxPrice(request.price)
             productRepository.save(product)
         }
 
@@ -84,7 +80,7 @@ class PriceService(
         latitude: Double,
         longitude: Double,
     ): List<PendingValidationResponse> {
-        if (user.trustScore < minimumTrustScore) return emptyList()
+        if (!user.canValidatePrices(minimumTrustScore)) return emptyList()
         return locationProductPriceRepository
             .findPendingValidationNearby(user.id, latitude, longitude, proximityMeters)
             .map { PendingValidationResponse.from(it) }
@@ -94,7 +90,7 @@ class PriceService(
         reportId: Long,
         confirmer: User,
     ): ConfirmPriceResponse {
-        if (confirmer.trustScore < minimumTrustScore) throw IllegalStateException("User trust score too low to confirm")
+        if (!confirmer.canValidatePrices(minimumTrustScore)) throw IllegalStateException("User trust score too low to confirm")
 
         val report =
             locationProductPriceRepository.findById(reportId).orElseThrow {
@@ -105,11 +101,10 @@ class PriceService(
             return ConfirmPriceResponse()
         }
 
-        // R9 — update score proportionally to confirmer's trust score
-        report.score = (report.score + (1 - report.score) * confirmer.trustScore * 0.3).coerceIn(0.0, 1.0)
+        report.applyConfirmationBoost(confirmer.trustScore)
         locationProductPriceRepository.save(report)
 
-        confirmer.trustScore = (confirmer.trustScore + 0.01 * confirmer.recoveryMultiplier).coerceIn(0.0, 1.0)
+        confirmer.adjustTrustScore(0.01 * confirmer.recoveryMultiplier, minimumTrustScore)
         userRepository.save(confirmer)
 
         priceValidationRepository.save(
@@ -128,7 +123,7 @@ class PriceService(
         disputer: User,
         request: DisputePriceRequest,
     ): LocationProductPrice {
-        if (disputer.trustScore < minimumTrustScore) throw IllegalStateException("User trust score too low to dispute")
+        if (!disputer.canValidatePrices(minimumTrustScore)) throw IllegalStateException("User trust score too low to dispute")
 
         val report =
             locationProductPriceRepository.findById(reportId).orElseThrow {
@@ -139,21 +134,15 @@ class PriceService(
             throw IllegalStateException("Already disputed this report")
         }
 
-        // R12 — reduce report score proportionally to price difference
         val deviation = abs(request.alternativePrice.toDouble() - report.price.toDouble()) / report.price.toDouble()
-        report.score = (report.score - deviation * 0.3).coerceIn(0.0, 1.0)
+
+        report.applyDisputePenalty(deviation)
         locationProductPriceRepository.save(report)
 
-        // R12 — penalize original reporter
         val reporter = report.user!!
-        val wasAboveThreshold = reporter.trustScore >= minimumTrustScore
-        reporter.trustScore = (reporter.trustScore - deviation * 0.1).coerceIn(0.0, 1.0)
-        if (wasAboveThreshold && reporter.trustScore < minimumTrustScore) {
-            reporter.recoveryMultiplier *= 0.5
-        }
+        reporter.adjustTrustScore(-deviation * 0.1, minimumTrustScore)
         userRepository.save(reporter)
 
-        // store disputer's alternative price through full ingestion pipeline
         val alternativePriceReport =
             reportPrice(
                 ReportProductPriceRequest(
@@ -184,8 +173,9 @@ class PriceService(
         val stats = locationProductPriceRepository.getPriceStats(productId)
         val topLocations = locationProductPriceRepository.getTopLocations(productId)
         val allPrices = locationProductPriceRepository.findValidByProductIdOrderByReportedAtDesc(productId)
-        val weightedPrice = computeWeightedPrice(allPrices)
-        return PriceSummaryResponse.from(stats, topLocations, weightedPrice)
+        val weightedPrice = LocationProductPrice.computeInflationAdjustedPrice(allPrices, averageMonthlyInflation)
+        val weightedByConfidencePrice = LocationProductPrice.computeDecayWeightedPrice(allPrices)
+        return PriceSummaryResponse.from(stats, topLocations, weightedPrice, weightedByConfidencePrice)
     }
 
     private fun applyIngestionRules(
@@ -209,13 +199,7 @@ class PriceService(
 
         if (!skipThresholdCheck && weightedAverage != null) {
             val deviation = (request.price.toDouble() - weightedAverage) / weightedAverage
-            if (abs(deviation) > thresholdPercentage) {
-                val penalty = deviation * deviation
-                val wasAboveThreshold = user.trustScore >= minimumTrustScore
-                user.trustScore = (user.trustScore - penalty).coerceIn(0.0, 1.0)
-                if (wasAboveThreshold && user.trustScore < minimumTrustScore) {
-                    user.recoveryMultiplier *= 0.5
-                }
+            if (user.applyPricePenaltyIfNeeded(deviation, thresholdPercentage, minimumTrustScore)) {
                 userRepository.save(user)
                 return Pair(locationConfidence, 0.0)
             }
@@ -228,25 +212,10 @@ class PriceService(
             } else {
                 0.0
             }
-        val initialScore =
-            locationConfidence *
-                (0.5 + user.trustScore * 0.5) *
-                (1 - deviationPenalty * 0.3)
 
-        return Pair(locationConfidence, initialScore.coerceIn(0.0, 1.0))
-    }
+        val score = LocationProductPrice.computeInitialScore(locationConfidence, user.trustScore, deviationPenalty)
 
-    private fun computeWeightedPrice(prices: List<LocationProductPrice>): Double? {
-        if (prices.isEmpty()) return null
-        val decayFactor = 0.01
-        var weightedSum = 0.0
-        var totalWeight = 0.0
-        prices.forEach { report ->
-            val weight = exp(-decayFactor * report.ageInDays()) * report.locationConfidence
-            weightedSum += report.price.toDouble() * weight
-            totalWeight += weight
-        }
-        return if (totalWeight == 0.0) 0.0 else weightedSum / totalWeight
+        return Pair(locationConfidence, score)
     }
 
     fun getPricesFromLocation(
@@ -256,4 +225,15 @@ class PriceService(
         locationProductPriceRepository
             .getLocationPricesForProductInLocation(productId, locationId)
             .map { LocationProductPriceResponse.from(it) }
+
+    fun getPriceHistory(productId: Long): List<PriceHistoryPointResponse> {
+        val since = LocalDateTime.now().minus(180, ChronoUnit.DAYS)
+        return locationProductPriceRepository.findWeeklyAverages(productId, since)
+            .map { row ->
+                PriceHistoryPointResponse.from(
+                    weekStart = row.getWeekStart().toLocalDate(),
+                    avgPrice = row.getAvgPrice(),
+                )
+            }
+    }
 }

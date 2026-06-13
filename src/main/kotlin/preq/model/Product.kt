@@ -35,12 +35,6 @@ class Product : BaseEntity() {
     @Column
     var quantityType: String = ""
 
-    @Column(precision = 10, scale = 2)
-    var minPrice: BigDecimal? = null
-
-    @Column(precision = 10, scale = 2)
-    var maxPrice: BigDecimal? = null
-
     @OneToMany(mappedBy = "product", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val images: MutableList<ProductImage> = mutableListOf()
 
@@ -50,15 +44,6 @@ class Product : BaseEntity() {
     fun approvedImages() = images.filter { it.status == ProductImageStatus.APPROVED }
 
     fun hasBarcode() = barcode != null
-
-    fun updateMinMaxPrice(price: BigDecimal) {
-        if (minPrice == null || price < minPrice!!) {
-            minPrice = price
-        }
-        if (maxPrice == null || price > maxPrice!!) {
-            maxPrice = price
-        }
-    }
 
     fun compareInConsensus(embedding: FloatArray): Boolean {
         if (consensusImages.size != 3) return false

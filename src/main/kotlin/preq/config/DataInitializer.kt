@@ -366,8 +366,6 @@ class DataInitializer(
                     )
                 }
             }
-            product.minPrice = currentMinPrice
-            product.maxPrice = currentMaxPrice
             productRepository.save(product)
         }
     }

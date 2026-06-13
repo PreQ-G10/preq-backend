@@ -16,6 +16,7 @@ import preq.web.dto.response.ConfirmPriceResponse
 import preq.web.dto.response.HeatmapPointResponse
 import preq.web.dto.response.LocationProductPriceResponse
 import preq.web.dto.response.PendingValidationResponse
+import preq.web.dto.response.PriceHistoryPointResponse
 import preq.web.dto.response.PriceSummaryResponse
 import java.security.Principal
 
@@ -82,4 +83,8 @@ class ProductPriceController(
         @PathVariable productId: Long,
         @PathVariable locationId: Long,
     ): List<LocationProductPriceResponse> = priceService.getPricesFromLocation(productId, locationId)
+
+    @GetMapping("/history/{productId}")
+    fun getPriceHistory(@PathVariable productId: Long): List<PriceHistoryPointResponse> =
+        priceService.getPriceHistory(productId)
 }

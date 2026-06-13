@@ -21,8 +21,6 @@ data class NearbyOfferResponse(
                         brand = r.getProductBrand(),
                         quantity = r.getProductQuantity(),
                         quantityType = r.getProductQuantityType(),
-                        minPrice = r.getProductMinPrice(),
-                        maxPrice = r.getProductMaxPrice(),
                         barcode = r.getProductBarcode(),
                         images = emptyList(),
                     ),

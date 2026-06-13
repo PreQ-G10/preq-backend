@@ -18,6 +18,7 @@ import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.NearbyOffersResponse
 import preq.web.dto.response.ProductResponse
+import preq.web.dto.response.ProductSearchWithPriceResponse
 import java.security.Principal
 
 @RestController
@@ -36,7 +37,7 @@ class ProductController(
     @GetMapping("/search")
     fun searchByName(
         @RequestParam name: String,
-    ): List<ProductResponse> = productService.searchByName(name).map { ProductResponse.from(it) }
+    ): List<ProductSearchWithPriceResponse> = productService.searchByName(name)
 
     @PostMapping
     fun create(

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import preq.enum.ReportScore
 import preq.model.Product
 import java.math.BigDecimal
 
@@ -11,17 +12,22 @@ import java.math.BigDecimal
 interface ProductRepository : JpaRepository<Product, Long> {
     fun findByBarcode(barcode: String): Product?
 
-    @Query(
-        """
-        SELECT p 
-        FROM Product p 
-        WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')) 
+    @Query("""
+        SELECT p,
+           MAX(lpp.price) AS maxPrice,
+           MIN(lpp.price) AS minPrice
+        FROM Product p
+        LEFT JOIN LocationProductPrice lpp ON lpp.product.id = p.id
+        WHERE (
+            LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))
             OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :name, '%'))
-        """,
-    )
-    fun searchByName(
+        ) AND lpp.score >= :validThreshold
+        GROUP BY p
+    """)
+    fun searchByNameWithPrice(
         @Param("name") name: String,
-    ): List<Product>
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
+    ): List<Array<Any>>
 
     @Query(
         """
