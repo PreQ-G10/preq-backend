@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import org.locationtech.jts.geom.Point
 import preq.enum.UserRole
+import kotlin.math.abs
 
 @Entity
 @Table(name = "users")
@@ -54,4 +55,28 @@ class User : BaseEntity() {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var role: UserRole = UserRole.USER
+
+    fun adjustTrustScore(
+        delta: Double,
+        threshold: Double,
+    ) {
+        val wasAboveThreshold = trustScore >= threshold
+        trustScore = (trustScore + delta).coerceIn(0.0, 1.0)
+        if (wasAboveThreshold && trustScore < threshold) {
+            recoveryMultiplier *= 0.5
+        }
+    }
+
+    fun canValidatePrices(threshold: Double) = trustScore >= threshold
+
+    fun applyPricePenaltyIfNeeded(
+        deviation: Double,
+        priceThreshold: Double,
+        trustThreshold: Double,
+    ): Boolean {
+        if (abs(deviation) <= priceThreshold) return false
+        val penalty = deviation * deviation
+        adjustTrustScore(-penalty, trustThreshold)
+        return true
+    }
 }

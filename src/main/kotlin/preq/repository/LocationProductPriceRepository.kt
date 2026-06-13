@@ -8,9 +8,11 @@ import preq.enum.ReportScore
 import preq.model.LocationProductPrice
 import preq.web.dto.projection.LocationPriceResult
 import preq.web.dto.projection.NearbyOfferResult
+import preq.web.dto.projection.PriceHistoryResult
 import preq.web.dto.projection.PriceStats
 import preq.web.dto.projection.TopLocationResult
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Repository
 interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, Long> {
@@ -256,4 +258,22 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("locationId") locationId: Long,
         @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<LocationProductPrice>
+
+    @Query(
+        """
+        SELECT FUNCTION('date_trunc', 'week', lpp.reportedAt) AS weekStart,
+           AVG(lpp.price) AS avgPrice
+        FROM LocationProductPrice lpp
+        WHERE lpp.product.id = :productId
+          AND lpp.reportedAt >= :since
+          AND lpp.score >= :validThreshold
+        GROUP BY FUNCTION('date_trunc', 'week', lpp.reportedAt)
+        ORDER BY FUNCTION('date_trunc', 'week', lpp.reportedAt) ASC
+    """,
+    )
+    fun findWeeklyAverages(
+        @Param("productId") productId: Long,
+        @Param("since") since: LocalDateTime,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
+    ): List<PriceHistoryResult>
 }

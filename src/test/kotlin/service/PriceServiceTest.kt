@@ -51,6 +51,7 @@ class PriceServiceTest {
             proximityMeters = 200.0,
             coldStartMinimumReports = 3,
             minimumTrustScore = 0.25,
+            averageMonthlyInflation = 0.03,
         )
 
     // ─────────────────────────────────────────────────────────
@@ -754,8 +755,8 @@ class PriceServiceTest {
             1L,
             stats,
             listOf(
-                priceEntry(BigDecimal("20.00"), daysAgo = 5),
-                priceEntry(BigDecimal("40.00"), daysAgo = 5),
+                priceEntry(BigDecimal("20.00"), daysAgo = 0),
+                priceEntry(BigDecimal("40.00"), daysAgo = 0),
             ),
         )
 

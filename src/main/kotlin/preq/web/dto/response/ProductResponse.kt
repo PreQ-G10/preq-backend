@@ -9,8 +9,6 @@ data class ProductResponse(
     val brand: String,
     val quantity: BigDecimal,
     val quantityType: String,
-    val minPrice: BigDecimal?,
-    val maxPrice: BigDecimal?,
     val barcode: String?,
     val images: List<String>,
 ) {
@@ -22,8 +20,6 @@ data class ProductResponse(
                 brand = product.brand,
                 quantity = product.quantity,
                 quantityType = product.quantityType,
-                minPrice = product.minPrice,
-                maxPrice = product.maxPrice,
                 barcode = product.barcode,
                 images = product.approvedImages().map { it.imageUrl },
             )
