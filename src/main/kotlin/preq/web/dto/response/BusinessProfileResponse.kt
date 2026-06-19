@@ -15,7 +15,10 @@ data class BusinessProfileResponse(
     val claimStatus: ClaimStatus,
 ) {
     companion object {
-        fun from(user: User, location: Location) = BusinessProfileResponse(
+        fun from(
+            user: User,
+            location: Location,
+        ) = BusinessProfileResponse(
             ownerName = user.name,
             ownerLastName = user.lastName,
             email = user.email,

@@ -10,10 +10,8 @@ data class BusinessRegisterRequest(
     val ownerLastName: String,
     val businessPhone: String,
     val cuit: String? = null,
-
     // Claim existing location
     val locationId: Long? = null,
-
     // OR create new location
     val locationName: String? = null,
     val locationAddress: String? = null,

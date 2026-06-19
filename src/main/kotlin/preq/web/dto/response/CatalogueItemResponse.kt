@@ -15,15 +15,16 @@ data class CatalogueItemResponse(
     val updatedAt: LocalDateTime,
 ) {
     companion object {
-        fun from(lpp: LocationProductPrice) = CatalogueItemResponse(
-            productId = lpp.product!!.id,
-            name = lpp.product!!.name,
-            brand = lpp.product!!.brand,
-            quantity = lpp.product!!.quantity,
-            quantityType = lpp.product!!.quantityType,
-            barcode = lpp.product!!.barcode,
-            price = lpp.price,
-            updatedAt = lpp.reportedAt,
-        )
+        fun from(lpp: LocationProductPrice) =
+            CatalogueItemResponse(
+                productId = lpp.product!!.id,
+                name = lpp.product!!.name,
+                brand = lpp.product!!.brand,
+                quantity = lpp.product!!.quantity,
+                quantityType = lpp.product!!.quantityType,
+                barcode = lpp.product!!.barcode,
+                price = lpp.price,
+                updatedAt = lpp.reportedAt,
+            )
     }
 }

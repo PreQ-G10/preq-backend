@@ -24,7 +24,7 @@ import java.security.Principal
 @RequestMapping("/api/locations")
 class LocationController(
     private val locationService: LocationService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
     private fun user(principal: Principal): User = userRepository.findByEmail(principal.name).orElseThrow()
 

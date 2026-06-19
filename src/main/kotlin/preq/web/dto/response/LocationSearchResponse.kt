@@ -12,12 +12,13 @@ data class LocationSearchResponse(
     val claimStatus: ClaimStatus,
 ) {
     companion object {
-        fun from(location: Location) = LocationSearchResponse(
-            id = location.id,
-            name = location.name,
-            address = location.address,
-            type = location.type,
-            claimStatus = location.claimStatus,
-        )
+        fun from(location: Location) =
+            LocationSearchResponse(
+                id = location.id,
+                name = location.name,
+                address = location.address,
+                type = location.type,
+                claimStatus = location.claimStatus,
+            )
     }
 }

@@ -238,7 +238,7 @@ class DataInitializer(
         createBusinessCatalogue(products, businessUsers)
         println(
             "DataInitializer: Done. ${locations.size} locations, ${users.size} users, " +
-                    "${businessUsers.size} business accounts, prices generated for ${products.size} products.",
+                "${businessUsers.size} business accounts, prices generated for ${products.size} products.",
         )
     }
 

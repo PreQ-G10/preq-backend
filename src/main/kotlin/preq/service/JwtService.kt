@@ -20,7 +20,11 @@ class JwtService(
 
     fun generateRefreshToken(email: String): String = buildToken(email, refreshTokenExpMs, emptyMap())
 
-    private fun buildToken(subject: String, expirationMs: Long, extraClaims: Map<String, Any> = emptyMap()): String =
+    private fun buildToken(
+        subject: String,
+        expirationMs: Long,
+        extraClaims: Map<String, Any> = emptyMap(),
+    ): String =
         Jwts
             .builder()
             .subject(subject)

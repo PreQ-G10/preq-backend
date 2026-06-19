@@ -46,7 +46,8 @@ interface LocationRepository : JpaRepository<Location, Long> {
         maxDistanceMeters: Double,
     ): LocationWithDistance?
 
-    @Query("""
+    @Query(
+        """
     SELECT l 
     FROM Location l
     WHERE ST_DistanceSphere(
@@ -54,7 +55,8 @@ interface LocationRepository : JpaRepository<Location, Long> {
         ST_MakePoint(:longitude, :latitude)
     ) <= :radiusMeters
         AND l.claimStatus = 'UNCLAIMED'
-    """)
+    """,
+    )
     fun findNearby(
         latitude: Double,
         longitude: Double,

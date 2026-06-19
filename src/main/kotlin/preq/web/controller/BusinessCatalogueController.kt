@@ -23,31 +23,26 @@ class BusinessCatalogueController(
     private val catalogueService: BusinessCatalogueService,
     private val userRepository: UserRepository,
 ) {
-    private fun getUser(principal: Principal): User =
-        userRepository.findByEmail(principal.name).orElseThrow()
+    private fun getUser(principal: Principal): User = userRepository.findByEmail(principal.name).orElseThrow()
 
     @GetMapping
-    fun getCatalogue(principal: Principal): List<CatalogueItemResponse> =
-        catalogueService.getCatalogue(getUser(principal))
+    fun getCatalogue(principal: Principal): List<CatalogueItemResponse> = catalogueService.getCatalogue(getUser(principal))
 
     @PostMapping
     fun addToCatalogue(
         @RequestBody request: CatalogueRequest,
         principal: Principal,
-    ): CatalogueItemResponse =
-        catalogueService.addToCatalogue(getUser(principal), request)
+    ): CatalogueItemResponse = catalogueService.addToCatalogue(getUser(principal), request)
 
     @PutMapping
     fun updatePrices(
         @RequestBody request: UpdateCataloguePriceRequest,
         principal: Principal,
-    ): List<CatalogueItemResponse> =
-        catalogueService.updatePrices(getUser(principal), request)
+    ): List<CatalogueItemResponse> = catalogueService.updatePrices(getUser(principal), request)
 
     @DeleteMapping
     fun deleteFromCatalogue(
         @RequestBody request: DeleteFromCatalogueRequest,
         principal: Principal,
-    ): DeleteFromCatalogueResponse =
-        catalogueService.deleteFromCatalogue(getUser(principal), request)
+    ): DeleteFromCatalogueResponse = catalogueService.deleteFromCatalogue(getUser(principal), request)
 }
