@@ -9,6 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import preq.enum.LocationType
 import preq.enum.ReportScore
+import preq.enum.ReportSource
+import preq.enum.UserRole
 import preq.model.Location
 import preq.model.LocationProductPrice
 import preq.model.Product
@@ -122,6 +124,15 @@ class DataInitializer(
             "Ortega",
         )
 
+    // Owners for the seeded business accounts — one per claimed location
+    private val businessOwnerNames =
+        listOf(
+            "Carlos" to "Pereyra",
+            "Marisa" to "Acosta",
+            "Diego" to "Funes",
+            "Patricia" to "Bazán",
+        )
+
     // ─────────────────────────────────────────────────────────
     // Reference prices
     // ─────────────────────────────────────────────────────────
@@ -223,7 +234,12 @@ class DataInitializer(
         val users = createUsers()
         val products = productRepository.findAll()
         createPriceReports(products, locations, users)
-        println("DataInitializer: Done. ${locations.size} locations, ${users.size} users, prices generated for ${products.size} products.")
+        val businessUsers = createBusinessAccounts(locations)
+        createBusinessCatalogue(products, businessUsers)
+        println(
+            "DataInitializer: Done. ${locations.size} locations, ${users.size} users, " +
+                "${businessUsers.size} business accounts, prices generated for ${products.size} products.",
+        )
     }
 
     // ─────────────────────────────────────────────────────────
@@ -282,6 +298,7 @@ class DataInitializer(
                             lastName = seedLastNames[index - 1]
                             email = "seed$index@preq.app"
                             password = passwordEncoder.encode("password")
+                            role = UserRole.USER
                             trustScore = (tier.trustScore + trustVariance).coerceIn(0.0, 1.0)
                             recoveryMultiplier = tier.recoveryMultiplier
                         },
@@ -368,6 +385,96 @@ class DataInitializer(
             }
             productRepository.save(product)
         }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Step 4 — Business accounts
+    // ─────────────────────────────────────────────────────────
+
+    private fun createBusinessAccounts(locations: List<Location>): List<User> {
+        val existingBusinessUsers = userRepository.findAll().filter { it.role == UserRole.BUSINESS }
+        if (existingBusinessUsers.isNotEmpty()) {
+            println("DataInitializer: Business accounts already seeded, skipping.")
+            return existingBusinessUsers
+        }
+
+        // Claim a handful of real (non-"Test") locations, one business per location.
+        val claimable = locations.filter { it.name != "Test" }.shuffled(rng).take(businessOwnerNames.size)
+
+        val businessUsers =
+            claimable.mapIndexed { i, location ->
+                val (firstName, lastNameValue) = businessOwnerNames[i]
+                val user =
+                    userRepository.save(
+                        User().apply {
+                            name = firstName
+                            lastName = lastNameValue
+                            email = "business$i@preq.app"
+                            password = passwordEncoder.encode("password")
+                            role = UserRole.BUSINESS
+                            trustScore = 1.0
+                            recoveryMultiplier = 1.0
+                        },
+                    )
+                location.claimedBy = user
+                locationRepository.save(location)
+                user
+            }
+
+        println("DataInitializer: Created ${businessUsers.size} business accounts, each claiming one location.")
+        return businessUsers
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Step 5 — Business catalogue prices
+    // ─────────────────────────────────────────────────────────
+
+    private fun createBusinessCatalogue(
+        products: List<Product>,
+        businessUsers: List<User>,
+    ) {
+        if (businessUsers.isEmpty()) return
+
+        val existingCatalogueEntries =
+            locationProductPriceRepository.findAll().count { it.source == ReportSource.BUSINESS_CATALOGUE }
+        if (existingCatalogueEntries > 0) {
+            println("DataInitializer: Business catalogue already seeded, skipping.")
+            return
+        }
+
+        var created = 0
+
+        businessUsers.forEach { business ->
+            val location = business.let { locationRepository.findByClaimedBy(it) } ?: return@forEach
+
+            // Each business lists a subset of the catalogue — not every product.
+            val catalogueProducts = products.shuffled(rng).take(rng.nextInt(10, products.size.coerceAtMost(25) + 1))
+
+            catalogueProducts.forEach { product ->
+                val reference = findReference(product)
+                val basePrice = reference?.referencePrice ?: rng.nextInt(500, 15000)
+
+                // Business-listed prices are direct and trustworthy — small noise only.
+                val noise = rng.nextInt(-20, 21) * 10
+                val finalPrice = (basePrice + noise).coerceAtLeast(100)
+
+                locationProductPriceRepository.save(
+                    LocationProductPrice().apply {
+                        this.product = product
+                        this.location = location
+                        this.user = business
+                        this.price = BigDecimal(finalPrice)
+                        this.reportedAt = LocalDateTime.now().minusDays(rng.nextLong(0, 14))
+                        this.locationConfidence = 1.0
+                        this.score = 1.0
+                        this.source = ReportSource.BUSINESS_CATALOGUE
+                    },
+                )
+                created++
+            }
+        }
+
+        println("DataInitializer: Created $created business catalogue price entries across ${businessUsers.size} businesses.")
     }
 
     private fun tierForScore(score: Double): UserTier =

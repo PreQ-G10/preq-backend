@@ -1,5 +1,6 @@
 package preq.service
 
+import jakarta.persistence.EntityNotFoundException
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.PrecisionModel
@@ -7,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import preq.enum.UserRole
 import preq.model.User
 import preq.repository.UserRepository
 import preq.web.dto.request.LoginRequest
@@ -40,13 +42,14 @@ class AuthService(
                     }
                 )
                 this.email = request.email
+                this.role = UserRole.valueOf(request.role)
                 this.password = passwordEncoder.encode(request.password)
             }
 
         userRepository.save(user)
 
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(user.email),
+            accessToken = jwtService.generateAccessToken(user),
             refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
@@ -56,9 +59,14 @@ class AuthService(
             UsernamePasswordAuthenticationToken(request.email, request.password),
         )
 
+        val user =
+            userRepository
+                .findByEmail(request.email)
+                .orElseThrow { EntityNotFoundException("User not found") }
+
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(request.email),
-            refreshToken = jwtService.generateRefreshToken(request.email),
+            accessToken = jwtService.generateAccessToken(user),
+            refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
 
@@ -69,9 +77,14 @@ class AuthService(
             throw IllegalArgumentException("Invalid or expired refresh token")
         }
 
+        val user =
+            userRepository
+                .findByEmail(email)
+                .orElseThrow { EntityNotFoundException("User not found") }
+
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(email),
-            refreshToken = jwtService.generateRefreshToken(email),
+            accessToken = jwtService.generateAccessToken(user),
+            refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
 }

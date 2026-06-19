@@ -6,6 +6,7 @@ data class RegisterRequest(
     val address: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
+    val role: String,
     val email: String,
     val password: String,
 )

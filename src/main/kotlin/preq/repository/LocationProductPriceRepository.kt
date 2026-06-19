@@ -5,7 +5,10 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import preq.enum.ReportScore
+import preq.enum.ReportSource
+import preq.model.Location
 import preq.model.LocationProductPrice
+import preq.model.Product
 import preq.web.dto.projection.LocationPriceResult
 import preq.web.dto.projection.NearbyOfferResult
 import preq.web.dto.projection.PriceHistoryResult
@@ -203,8 +206,6 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
                 p.brand           AS productBrand,
                 p.quantity        AS productQuantity,
                 p.quantity_type   AS productQuantityType,
-                p.min_price       AS productMinPrice,
-                p.max_price       AS productMaxPrice,
                 p.barcode         AS productBarcode,
                 l.id              AS locationId,
                 l.name            AS locationName,
@@ -226,8 +227,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
                     ST_SetSRID(ST_MakePoint(:userLng, :userLat), 4326)
                   ) <= :radiusMeters
             GROUP BY
-                p.id, p.name, p.brand, p.quantity, p.quantity_type,
-                p.min_price, p.max_price, p.barcode,
+                p.id, p.name, p.brand, p.quantity, p.quantity_type, p.barcode,
                 l.id, l.name, l.address, l.type
             HAVING MIN(lpp.price) <= AVG(lpp.price) * (1.0 - :thresholdFraction)
             ORDER BY (AVG(lpp.price) - MIN(lpp.price)) DESC
@@ -276,4 +276,27 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
         @Param("since") since: LocalDateTime,
         @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<PriceHistoryResult>
+
+    fun findByLocationAndSource(
+        location: Location,
+        source: ReportSource,
+    ): List<LocationProductPrice>
+
+    fun findByLocationAndProductAndSource(
+        location: Location,
+        product: Product,
+        source: ReportSource,
+    ): LocationProductPrice?
+
+    fun deleteByLocationAndProductIdInAndSource(
+        location: Location,
+        productIds: List<Long>,
+        source: ReportSource,
+    )
+
+    fun findByLocationAndProductIdInAndSource(
+        location: Location,
+        productIds: List<Long>,
+        source: ReportSource,
+    ): List<LocationProductPrice>
 }
