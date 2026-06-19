@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import preq.model.User
 import java.util.Date
 
 @Service
@@ -15,9 +16,19 @@ class JwtService(
 ) {
     private val key = Keys.hmacShaKeyFor(secret.toByteArray())
 
-    fun generateAccessToken(email: String): String = buildToken(email, accessTokenExpMs)
+    fun generateAccessToken(user: User): String = buildToken(user.email, accessTokenExpMs, mapOf("role" to user.role.name))
 
-    fun generateRefreshToken(email: String): String = buildToken(email, refreshTokenExpMs)
+    fun generateRefreshToken(email: String): String = buildToken(email, refreshTokenExpMs, emptyMap())
+
+    private fun buildToken(subject: String, expirationMs: Long, extraClaims: Map<String, Any> = emptyMap()): String =
+        Jwts
+            .builder()
+            .subject(subject)
+            .claims(extraClaims)
+            .issuedAt(Date())
+            .expiration(Date(System.currentTimeMillis() + expirationMs))
+            .signWith(key)
+            .compact()
 
     fun extractEmail(token: String): String = extractClaims(token).subject
 
@@ -25,18 +36,6 @@ class JwtService(
         runCatching {
             extractClaims(token).expiration.after(Date())
         }.getOrDefault(false)
-
-    private fun buildToken(
-        subject: String,
-        expirationMs: Long,
-    ): String =
-        Jwts
-            .builder()
-            .subject(subject)
-            .issuedAt(Date())
-            .expiration(Date(System.currentTimeMillis() + expirationMs))
-            .signWith(key)
-            .compact()
 
     private fun extractClaims(token: String): Claims =
         Jwts

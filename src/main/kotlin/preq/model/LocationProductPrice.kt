@@ -2,6 +2,8 @@ package preq.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -10,6 +12,7 @@ import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.PastOrPresent
 import preq.enum.ReportScore
+import preq.enum.ReportSource
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -45,6 +48,10 @@ class LocationProductPrice : BaseEntity() {
 
     @Column(name = "score", nullable = false)
     var score: Double = 1.0
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var source: ReportSource = ReportSource.USER_REPORT
 
     val reportScore: ReportScore
         get() = ReportScore.fromScore(score)

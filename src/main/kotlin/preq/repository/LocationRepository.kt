@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import preq.model.Location
+import preq.model.User
 import preq.web.dto.projection.LocationWithDistance
 
 @Repository
@@ -44,4 +45,21 @@ interface LocationRepository : JpaRepository<Location, Long> {
         lon: Double,
         maxDistanceMeters: Double,
     ): LocationWithDistance?
+
+    @Query("""
+    SELECT l 
+    FROM Location l
+    WHERE ST_DistanceSphere(
+        l.coordinates,
+        ST_MakePoint(:longitude, :latitude)
+    ) <= :radiusMeters
+        AND l.claimStatus = 'UNCLAIMED'
+    """)
+    fun findNearby(
+        latitude: Double,
+        longitude: Double,
+        radiusMeters: Double = 50.0,
+    ): List<Location>
+
+    fun findByClaimedBy(user: User): Location?
 }

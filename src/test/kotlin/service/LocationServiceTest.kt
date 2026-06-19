@@ -14,6 +14,8 @@ import preq.enum.LocationDetectionStatus
 import preq.enum.LocationType
 import preq.model.Location
 import preq.repository.LocationRepository
+import preq.repository.UserRepository
+import preq.service.AuthService
 import preq.service.LocationService
 import preq.web.dto.projection.LocationWithDistance
 import preq.web.dto.request.CreateLocationRequest
@@ -21,7 +23,9 @@ import kotlin.test.assertNotEquals
 
 class LocationServiceTest {
     private val locationRepository: LocationRepository = mock()
-    private val service = LocationService(locationRepository)
+    private val userRepository: UserRepository = mock()
+    private val authService: AuthService = mock()
+    private val service = LocationService(locationRepository, userRepository, authService)
 
     private fun mockLocationWithDistance(distanceMeters: Double = 50.0): LocationWithDistance {
         val m = mock<LocationWithDistance>()

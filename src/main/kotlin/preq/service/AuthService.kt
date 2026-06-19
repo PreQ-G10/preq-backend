@@ -13,6 +13,8 @@ import preq.web.dto.request.LoginRequest
 import preq.web.dto.request.RefreshTokenRequest
 import preq.web.dto.request.RegisterRequest
 import preq.web.dto.response.AuthResponse
+import jakarta.persistence.EntityNotFoundException
+import preq.enum.UserRole
 
 @Service
 class AuthService(
@@ -26,27 +28,27 @@ class AuthService(
             throw IllegalArgumentException("Email already registered")
         }
 
-        val user =
-            User().apply {
-                this.name = request.name
-                this.lastName = request.lastName
-                this.address = request.address
-                this.addressLocation = (
+        val user = User().apply {
+            this.name = request.name
+            this.lastName = request.lastName
+            this.address = request.address
+            this.addressLocation = (
                     if (request.latitude != null && request.longitude != null) {
                         GeometryFactory(PrecisionModel(), 4326)
                             .createPoint(Coordinate(request.longitude, request.latitude))
                     } else {
                         null
                     }
-                )
-                this.email = request.email
-                this.password = passwordEncoder.encode(request.password)
-            }
+                    )
+            this.email = request.email
+            this.role = UserRole.valueOf(request.role)
+            this.password = passwordEncoder.encode(request.password)
+        }
 
         userRepository.save(user)
 
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(user.email),
+            accessToken = jwtService.generateAccessToken(user),
             refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
@@ -56,9 +58,12 @@ class AuthService(
             UsernamePasswordAuthenticationToken(request.email, request.password),
         )
 
+        val user = userRepository.findByEmail(request.email)
+            .orElseThrow { EntityNotFoundException("User not found") }
+
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(request.email),
-            refreshToken = jwtService.generateRefreshToken(request.email),
+            accessToken = jwtService.generateAccessToken(user),
+            refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
 
@@ -69,9 +74,12 @@ class AuthService(
             throw IllegalArgumentException("Invalid or expired refresh token")
         }
 
+        val user = userRepository.findByEmail(email)
+            .orElseThrow { EntityNotFoundException("User not found") }
+
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(email),
-            refreshToken = jwtService.generateRefreshToken(email),
+            accessToken = jwtService.generateAccessToken(user),
+            refreshToken = jwtService.generateRefreshToken(user.email),
         )
     }
 }
