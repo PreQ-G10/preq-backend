@@ -36,6 +36,8 @@ class PriceService(
     @Value("\${preq.prices.cold-start-minimum-reports}") private val coldStartMinimumReports: Int,
     @Value("\${preq.trust.minimum-score}") private val minimumTrustScore: Double,
     @Value("\${preq.prices.average-monthly-inflation}") private val averageMonthlyInflation: Double,
+    @Value("\${preq.prices.proximity-meters}") private val radiusMeters: Double,
+    @Value("\${preq.prices.business-weight}") private val businessWeight: Double,
 ) {
     fun reportPrice(
         request: ReportProductPriceRequest,
@@ -166,12 +168,25 @@ class PriceService(
         return alternativePriceReport
     }
 
-    fun getPriceSummary(productId: Long): PriceSummaryResponse {
+    fun getPriceSummary(productId: Long, user: User): PriceSummaryResponse {
         productRepository.findById(productId).orElseThrow {
             NoSuchElementException("Product $productId not found")
         }
         val stats = locationProductPriceRepository.getPriceStats(productId)
-        val topLocations = locationProductPriceRepository.getTopLocations(productId)
+        val topLocations = if (user.addressLocation != null) {
+            locationProductPriceRepository.getTopLocations(
+                productId = productId,
+                userLat = user.addressLocation!!.y,
+                userLon = user.addressLocation!!.x,
+                radiusMeters = radiusMeters,
+                businessWeight = businessWeight,
+            )
+        } else {
+            locationProductPriceRepository.getTopLocationsWithoutRadius(
+                productId = productId,
+                businessWeight = businessWeight,
+            )
+        }
         val allPrices = locationProductPriceRepository.findValidByProductIdOrderByReportedAtDesc(productId)
         val weightedPrice = LocationProductPrice.computeInflationAdjustedPrice(allPrices, averageMonthlyInflation)
         val weightedByConfidencePrice = LocationProductPrice.computeDecayWeightedPrice(allPrices)

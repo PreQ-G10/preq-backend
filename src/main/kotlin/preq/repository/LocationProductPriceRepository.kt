@@ -21,15 +21,17 @@ import java.time.LocalDateTime
 interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, Long> {
     @Query(
         value = """
-            SELECT 
-                AVG(lpp.price) as avgPrice,
-                MAX(lpp.price) as maxPrice,
-                MIN(lpp.price) as minPrice
-            FROM location_product_price lpp
-            JOIN users u ON u.id = lpp.user_id
-            WHERE lpp.product_id = :productId
-            AND lpp.score >= :validThreshold
-        """,
+        SELECT 
+            AVG(lpp.price) as avgPrice,
+            MAX(lpp.price) as maxPrice,
+            MIN(lpp.price) as minPrice,
+            COUNT(*) as totalReportCount
+        FROM location_product_price lpp
+        JOIN users u ON u.id = lpp.user_id
+        WHERE lpp.product_id = :productId
+        AND lpp.score >= :validThreshold
+        AND lpp.source != 'BUSINESS_CATALOGUE'
+    """,
         nativeQuery = true,
     )
     fun getPriceStats(
@@ -39,20 +41,66 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
 
     @Query(
         value = """
-            SELECT l.id as id, l.name, l.address, AVG(lpp.price) as avgPrice, COUNT(*) as reportCount
-            FROM location_product_price lpp
-            JOIN location l ON l.id = lpp.location_id
-            JOIN users u ON u.id = lpp.user_id
-            WHERE lpp.product_id = :productId
-            AND lpp.score >= :validThreshold
-            GROUP BY l.id, l.name, l.address
-            ORDER BY reportCount DESC
-            LIMIT 5
-        """,
+        SELECT 
+            l.id as id,
+            l.name as name,
+            l.address as address,
+            SUM(
+                lpp.price * CASE WHEN lpp.source != 'BUSINESS_CATALOGUE' THEN :businessWeight ELSE 1 END
+            ) / SUM(
+                CASE WHEN lpp.source != 'BUSINESS_CATALOGUE' THEN :businessWeight ELSE 1 END
+            ) as avgPrice,
+            COUNT(*) as reportCount
+        FROM location_product_price lpp
+        JOIN location l ON l.id = lpp.location_id
+        JOIN users u ON u.id = lpp.user_id
+        WHERE lpp.product_id = :productId
+        AND lpp.score >= :validThreshold
+        AND ST_DistanceSphere(
+            ST_MakePoint(l.longitude, l.latitude),
+            ST_MakePoint(:userLon, :userLat)
+        ) <= :radiusMeters
+        GROUP BY l.id, l.name, l.address
+        ORDER BY avgPrice ASC
+        LIMIT 10
+    """,
         nativeQuery = true,
     )
     fun getTopLocations(
         @Param("productId") productId: Long,
+        @Param("userLat") userLat: Double,
+        @Param("userLon") userLon: Double,
+        @Param("radiusMeters") radiusMeters: Double,
+        @Param("businessWeight") businessWeight: Double,
+        @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
+    ): List<TopLocationResult>
+
+    @Query(
+        value = """
+        SELECT 
+            l.id as id,
+            l.name as name,
+            l.address as address,
+            SUM(
+                lpp.price * CASE WHEN lpp.source != 'BUSINESS_CATALOGUE' THEN :businessWeight ELSE 1 END
+            ) / SUM(
+                CASE WHEN lpp.source != 'BUSINESS_CATALOGUE' THEN :businessWeight ELSE 1 END
+            ) as avgPrice,
+            COUNT(*) as reportCount
+        FROM location_product_price lpp
+        JOIN location l ON l.id = lpp.location_id
+        JOIN users u ON u.id = lpp.user_id
+        WHERE lpp.product_id = :productId
+        AND lpp.score >= :validThreshold
+        GROUP BY l.id, l.name, l.address
+        ORDER BY avgPrice ASC
+        LIMIT 10
+    """,
+        nativeQuery = true,
+    )
+    fun getTopLocationsWithoutRadius(
+        @Param("productId") productId: Long,
+        @Param("businessWeight") businessWeight: Double,
         @Param("validThreshold") validThreshold: Double = ReportScore.VALID_MIN,
     ): List<TopLocationResult>
 
@@ -70,6 +118,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
             AND lpp.score >= :validThreshold
+            AND lpp.source != 'BUSINESS_CATALOGUE'
             GROUP BY l.id, l.name, l.address, l.latitude, l.longitude
         """,
         nativeQuery = true,
@@ -93,6 +142,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
             AND lpp.score >= :validThreshold
+            AND lpp.source != 'BUSINESS_CATALOGUE'
             AND ST_DistanceSphere(
                 ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326),
                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
@@ -116,6 +166,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
             AND lpp.score >= :validThreshold
+            AND lpp.source != 'BUSINESS_CATALOGUE'
         """,
         nativeQuery = true,
     )
@@ -130,6 +181,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
             AND lpp.score >= :validThreshold
+            AND lpp.source != 'BUSINESS_CATALOGUE'
             ORDER BY lpp.reported_at DESC
         """,
         nativeQuery = true,
@@ -145,6 +197,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN users u ON u.id = lpp.user_id
             WHERE lpp.product_id = :productId
             AND lpp.score >= :validThreshold
+            AND lpp.source != 'BUSINESS_CATALOGUE'
         """,
         nativeQuery = true,
     )
@@ -176,6 +229,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN location l ON l.id = lpp.location_id
             WHERE lpp.score >= :pendingMin
             AND lpp.score < :validMin
+            AND lpp.source != 'BUSINESS_CATALOGUE'
             AND ST_DistanceSphere(
                 ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326),
                 ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
@@ -222,6 +276,7 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
             JOIN location l ON l.id  = lpp.location_id
             WHERE lpp.reported_at >= NOW() - INTERVAL '30 days'
               AND lpp.score >= :validThreshold
+              AND lpp.source != 'BUSINESS_CATALOGUE'
               AND ST_DistanceSphere(
                     ST_SetSRID(ST_MakePoint(l.longitude, l.latitude), 4326),
                     ST_SetSRID(ST_MakePoint(:userLng, :userLat), 4326)
@@ -244,7 +299,8 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
 
     @Query(
         """
-            SELECT lpp.* FROM location_product_price lpp
+            SELECT lpp.* 
+            FROM location_product_price lpp
             JOIN location l ON l.id = lpp.location_id
             WHERE lpp.product_id = :productId
                 AND l.id = :locationId
@@ -260,16 +316,18 @@ interface LocationProductPriceRepository : JpaRepository<LocationProductPrice, L
     ): List<LocationProductPrice>
 
     @Query(
-        """
-        SELECT FUNCTION('date_trunc', 'week', lpp.reportedAt) AS weekStart,
-           AVG(lpp.price) AS avgPrice
-        FROM LocationProductPrice lpp
-        WHERE lpp.product.id = :productId
-          AND lpp.reportedAt >= :since
+        value = """
+        SELECT date_trunc('week', lpp.reported_at) AS weekStart,
+               AVG(lpp.price) AS avgPrice
+        FROM location_product_price lpp
+        WHERE lpp.product_id = :productId
+          AND lpp.reported_at >= :since
           AND lpp.score >= :validThreshold
-        GROUP BY FUNCTION('date_trunc', 'week', lpp.reportedAt)
-        ORDER BY FUNCTION('date_trunc', 'week', lpp.reportedAt) ASC
+          AND lpp.source != 'BUSINESS_CATALOGUE'
+        GROUP BY date_trunc('week', lpp.reported_at)
+        ORDER BY date_trunc('week', lpp.reported_at) ASC
     """,
+        nativeQuery = true,
     )
     fun findWeeklyAverages(
         @Param("productId") productId: Long,

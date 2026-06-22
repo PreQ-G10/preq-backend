@@ -10,6 +10,7 @@ data class PriceSummaryResponse(
     val weightedPrice: Double?,
     val weightedByConfidencePrice: Double?,
     val topLocations: List<TopLocationResponse>,
+    val totalReportCount: Long,
 ) {
     companion object {
         fun from(
@@ -23,16 +24,8 @@ data class PriceSummaryResponse(
             minPrice = stats.getMinPrice(),
             weightedPrice = weightedPrice,
             weightedByConfidencePrice = weightedByConfidencePrice,
-            topLocations =
-                topLocations.map {
-                    TopLocationResponse(
-                        id = it.getId(),
-                        name = it.getName(),
-                        address = it.getAddress(),
-                        avgPrice = it.getAvgPrice(),
-                        reportCount = it.getReportCount(),
-                    )
-                },
+            topLocations = topLocations.map { TopLocationResponse.from(it) },
+            totalReportCount = stats.getTotalReportCount(),
         )
     }
 }

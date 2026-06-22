@@ -68,7 +68,11 @@ class ProductPriceController(
     @GetMapping("/{productId}")
     fun getSummary(
         @PathVariable productId: Long,
-    ): PriceSummaryResponse = priceService.getPriceSummary(productId)
+        principal: Principal,
+    ): PriceSummaryResponse {
+        val user = userRepository.findByEmail(principal.name).orElseThrow()
+        return priceService.getPriceSummary(productId, user)
+    }
 
     @GetMapping("/{productId}/heatmap")
     fun getHeatmapData(

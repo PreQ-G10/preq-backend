@@ -1,5 +1,7 @@
 package preq.web.dto.response
 
+import preq.web.dto.projection.TopLocationResult
+
 data class TopLocationResponse(
     val id: Long,
     val name: String,
@@ -8,13 +10,12 @@ data class TopLocationResponse(
     val reportCount: Int,
 ) {
     companion object {
-        fun from(row: Array<Any>) =
-            TopLocationResponse(
-                id = row [0] as Long,
-                name = row[1] as String,
-                address = row[2] as String,
-                avgPrice = (row[3] as Number).toDouble(),
-                reportCount = (row[4] as Number).toInt(),
-            )
+        fun from(row: TopLocationResult) = TopLocationResponse(
+            id = row.getId(),
+            name = row.getName(),
+            address = row.getAddress(),
+            avgPrice = row.getAvgPrice(),
+            reportCount = row.getReportCount(),
+        )
     }
 }

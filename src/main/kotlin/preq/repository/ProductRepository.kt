@@ -23,6 +23,7 @@ interface ProductRepository : JpaRepository<Product, Long> {
             LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))
             OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :name, '%'))
         ) AND lpp.score >= :validThreshold
+        AND lpp.source != 'BUSINESS_CATALOGUE'
         GROUP BY p
     """,
     )
