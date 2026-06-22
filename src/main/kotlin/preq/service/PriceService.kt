@@ -168,25 +168,29 @@ class PriceService(
         return alternativePriceReport
     }
 
-    fun getPriceSummary(productId: Long, user: User): PriceSummaryResponse {
+    fun getPriceSummary(
+        productId: Long,
+        user: User,
+    ): PriceSummaryResponse {
         productRepository.findById(productId).orElseThrow {
             NoSuchElementException("Product $productId not found")
         }
         val stats = locationProductPriceRepository.getPriceStats(productId)
-        val topLocations = if (user.addressLocation != null) {
-            locationProductPriceRepository.getTopLocations(
-                productId = productId,
-                userLat = user.addressLocation!!.y,
-                userLon = user.addressLocation!!.x,
-                radiusMeters = radiusMeters,
-                businessWeight = businessWeight,
-            )
-        } else {
-            locationProductPriceRepository.getTopLocationsWithoutRadius(
-                productId = productId,
-                businessWeight = businessWeight,
-            )
-        }
+        val topLocations =
+            if (user.addressLocation != null) {
+                locationProductPriceRepository.getTopLocations(
+                    productId = productId,
+                    userLat = user.addressLocation!!.y,
+                    userLon = user.addressLocation!!.x,
+                    radiusMeters = radiusMeters,
+                    businessWeight = businessWeight,
+                )
+            } else {
+                locationProductPriceRepository.getTopLocationsWithoutRadius(
+                    productId = productId,
+                    businessWeight = businessWeight,
+                )
+            }
         val allPrices = locationProductPriceRepository.findValidByProductIdOrderByReportedAtDesc(productId)
         val weightedPrice = LocationProductPrice.computeInflationAdjustedPrice(allPrices, averageMonthlyInflation)
         val weightedByConfidencePrice = LocationProductPrice.computeDecayWeightedPrice(allPrices)

@@ -17,15 +17,16 @@ data class LocationProductPriceResponse(
     val isBusinessReported: Boolean,
 ) {
     companion object {
-        fun from(price: LocationProductPrice) = LocationProductPriceResponse(
-            id = price.id,
-            productId = price.product!!.id,
-            locationId = price.location!!.id,
-            price = price.price,
-            reportedAt = price.reportedAt,
-            score = price.score,
-            reportScore = price.reportScore,
-            isBusinessReported = price.source == ReportSource.BUSINESS_CATALOGUE,
-        )
+        fun from(price: LocationProductPrice) =
+            LocationProductPriceResponse(
+                id = price.id,
+                productId = price.product!!.id,
+                locationId = price.location!!.id,
+                price = price.price,
+                reportedAt = price.reportedAt,
+                score = price.score,
+                reportScore = price.reportScore,
+                isBusinessReported = price.source == ReportSource.BUSINESS_CATALOGUE,
+            )
     }
 }

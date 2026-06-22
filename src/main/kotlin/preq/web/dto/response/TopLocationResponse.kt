@@ -10,12 +10,13 @@ data class TopLocationResponse(
     val reportCount: Int,
 ) {
     companion object {
-        fun from(row: TopLocationResult) = TopLocationResponse(
-            id = row.getId(),
-            name = row.getName(),
-            address = row.getAddress(),
-            avgPrice = row.getAvgPrice(),
-            reportCount = row.getReportCount(),
-        )
+        fun from(row: TopLocationResult) =
+            TopLocationResponse(
+                id = row.getId(),
+                name = row.getName(),
+                address = row.getAddress(),
+                avgPrice = row.getAvgPrice(),
+                reportCount = row.getReportCount(),
+            )
     }
 }
