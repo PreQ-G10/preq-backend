@@ -6,4 +6,6 @@ interface PriceStats {
     fun getMaxPrice(): Double?
 
     fun getMinPrice(): Double?
+
+    fun getTotalReportCount(): Long
 }
