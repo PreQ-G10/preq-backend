@@ -10,7 +10,7 @@ plugins {
 extra["tomcat.version"] = "10.1.55"
 extra["netty.version"] = "4.1.135.Final"
 extra["spring-security.version"] = "6.5.9"
-extra["jackson-databind.version"] = "2.21.4"
+extra["jackson-bom.version"] = "2.21.4"
 
 group = "preq"
 version = "1.0-SNAPSHOT"
