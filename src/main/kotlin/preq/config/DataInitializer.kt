@@ -14,10 +14,14 @@ import preq.enum.UserRole
 import preq.model.Location
 import preq.model.LocationProductPrice
 import preq.model.Product
+import preq.model.ShoppingList
+import preq.model.ShoppingListItem
 import preq.model.User
 import preq.repository.LocationProductPriceRepository
 import preq.repository.LocationRepository
 import preq.repository.ProductRepository
+import preq.repository.ShoppingListItemRepository
+import preq.repository.ShoppingListRepository
 import preq.repository.UserRepository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -31,6 +35,8 @@ class DataInitializer(
     private val locationProductPriceRepository: LocationProductPriceRepository,
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val shoppingListRepository: ShoppingListRepository,
+    private val shoppingListItemRepository: ShoppingListItemRepository,
 ) : ApplicationRunner {
     private val rng = Random(42)
     private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
@@ -223,22 +229,17 @@ class DataInitializer(
     }
 
     override fun run(args: ApplicationArguments) {
-        println("DataInitializer: Seeding...")
         val locations = createLocations()
         val users = createUsers()
         val products = productRepository.findAll()
         createPriceReports(products, locations, users)
         val businessUsers = createBusinessAccounts(locations)
         createBusinessCatalogue(products, businessUsers)
-        println(
-            "DataInitializer: Done. ${locations.size} locations, ${users.size} users, " +
-                "${businessUsers.size} business accounts, prices generated for ${products.size} products.",
-        )
+        createShoppingLists(users, locations)
     }
 
     private fun createLocations(): List<Location> {
         if (locationRepository.count() > 0) {
-            println("DataInitializer: Locations already seeded, skipping.")
             return locationRepository.findAll()
         }
         return locationSeeds.map { seed ->
@@ -257,7 +258,6 @@ class DataInitializer(
 
     private fun createUsers(): List<User> {
         if (userRepository.count() > 0) {
-            println("DataInitializer: Users already seeded, skipping.")
             return userRepository.findAll()
         }
 
@@ -294,7 +294,6 @@ class DataInitializer(
             }
         }
 
-        println("DataInitializer: Created ${users.size} seeded users.")
         return users
     }
 
@@ -389,7 +388,6 @@ class DataInitializer(
     private fun createBusinessAccounts(locations: List<Location>): List<User> {
         val existingBusinessUsers = userRepository.findAll().filter { it.role == UserRole.BUSINESS }
         if (existingBusinessUsers.isNotEmpty()) {
-            println("DataInitializer: Business accounts already seeded, skipping.")
             return existingBusinessUsers
         }
 
@@ -415,7 +413,6 @@ class DataInitializer(
                 user
             }
 
-        println("DataInitializer: Created ${businessUsers.size} business accounts, each claiming one location.")
         return businessUsers
     }
 
@@ -429,13 +426,9 @@ class DataInitializer(
             locationProductPriceRepository
                 .findAll()
                 .count { it.source == ReportSource.BUSINESS_CATALOGUE }
-        if (existingCatalogueEntries > 0) {
-            println("DataInitializer: Business catalogue already seeded, skipping.")
-            return
-        }
+        if (existingCatalogueEntries > 0) return
 
         val scenarios = BusinessScenario.entries.toList()
-        var created = 0
 
         businessUsers.forEach { business ->
             val location = locationRepository.findByClaimedBy(business) ?: return@forEach
@@ -486,11 +479,72 @@ class DataInitializer(
                         this.source = ReportSource.BUSINESS_CATALOGUE
                     },
                 )
-                created++
             }
         }
+    }
 
-        println("DataInitializer: Created $created business catalogue price entries across ${businessUsers.size} businesses.")
+    private fun createShoppingLists(
+        users: List<User>,
+        locations: List<Location>,
+    ) {
+        if (shoppingListRepository.count() > 0) return
+
+        val regularUsers = users.filter { it.role == UserRole.USER }
+
+        val locationPriceMap =
+            locationProductPriceRepository
+                .findAll()
+                .groupBy { it.location!!.id }
+                .mapValues { (_, prices) ->
+                    prices
+                        .groupBy { it.product!!.id }
+                        .mapValues { (_, productPrices) -> productPrices.maxBy { it.reportedAt } }
+                }
+
+        regularUsers.forEach { user ->
+            val listCount = rng.nextInt(1, 6)
+            val selectedLocations = locations.shuffled(rng).take(listCount)
+
+            selectedLocations.forEach { location ->
+                val productPriceMap = locationPriceMap[location.id] ?: return@forEach
+                if (productPriceMap.isEmpty()) return@forEach
+
+                val itemCount = rng.nextInt(2, minOf(8, productPriceMap.size) + 1)
+                val selectedPrices = productPriceMap.values.shuffled(rng).take(itemCount)
+
+                val list =
+                    ShoppingList().apply {
+                        this.user = user
+                        this.location = location
+                        this.completed = rng.nextDouble() < 0.3
+                        this.totalPrice = BigDecimal.ZERO
+                    }
+
+                var computedTotal = BigDecimal.ZERO
+
+                val items =
+                    selectedPrices.map { lpp ->
+                        val cartQuantity = rng.nextInt(1, 4)
+                        val itemTotal = lpp.price.multiply(cartQuantity.toBigDecimal())
+                        computedTotal += itemTotal
+                        ShoppingListItem().apply {
+                            this.shoppingList = list
+                            this.product = lpp.product!!
+                            this.cartQuantity = cartQuantity
+                            this.checkedQuantity = if (rng.nextBoolean()) rng.nextInt(0, cartQuantity + 1) else 0
+                            this.unitPrice = lpp.price
+                        }
+                    }
+
+                list.totalPrice = computedTotal
+                val savedList = shoppingListRepository.save(list)
+
+                items.forEach { item ->
+                    item.shoppingList = savedList
+                    shoppingListItemRepository.save(item)
+                }
+            }
+        }
     }
 
     private fun tierForScore(score: Double): UserTier =

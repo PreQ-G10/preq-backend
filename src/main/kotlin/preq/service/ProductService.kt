@@ -15,6 +15,7 @@ import preq.model.ProductImage
 import preq.model.User
 import preq.repository.LocationProductPriceRepository
 import preq.repository.ProductFieldContestRepository
+import preq.repository.ProductImageDisputeRepository
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
 import preq.util.mapper.ProductMapper
@@ -23,10 +24,12 @@ import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.NearbyOfferResponse
 import preq.web.dto.response.NearbyOffersResponse
+import preq.web.dto.response.ProductDetailResponse
 import preq.web.dto.response.ProductDetectionResponse
 import preq.web.dto.response.ProductResponse
 import preq.web.dto.response.ProductSearchWithPriceResponse
 import java.math.BigDecimal
+import kotlin.collections.associate
 
 @Service
 class ProductService(
@@ -43,6 +46,7 @@ class ProductService(
     @Value("3") private val minimumFieldContestVotesRequired: Double,
     @Value("\${offers.nearby.radius-meters:5000.0}") private val radiusMeters: Double = 5000.0,
     @Value("\${offers.nearby.discount-threshold:0.05}") private val discountThreshold: BigDecimal = BigDecimal("0.05"),
+    private val productImageDisputeRepository: ProductImageDisputeRepository,
 ) {
     val productMapper = ProductMapper
 
@@ -153,6 +157,18 @@ class ProductService(
     }
 
     fun getById(id: Long): Product = productRepository.findById(id).orElseThrow { NoSuchElementException("Product not found") }
+
+    fun getDetailById(id: Long): ProductDetailResponse {
+        val product =
+            productRepository
+                .findById(id)
+                .orElseThrow { NoSuchElementException("Product not found") }
+
+        val images = product.approvedImages()
+        val disputeCounts = images.associate { image -> image.id to productImageDisputeRepository.countByImageId(image.id) }
+
+        return ProductDetailResponse.from(product, images, disputeCounts)
+    }
 
     fun addImage(
         productId: Long,

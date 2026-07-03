@@ -17,6 +17,7 @@ import preq.web.dto.request.ContestProductFieldRequest
 import preq.web.dto.request.CreateProductRequest
 import preq.web.dto.response.BarcodeDetectionResponse
 import preq.web.dto.response.NearbyOffersResponse
+import preq.web.dto.response.ProductDetailResponse
 import preq.web.dto.response.ProductResponse
 import preq.web.dto.response.ProductSearchWithPriceResponse
 import java.security.Principal
@@ -33,6 +34,11 @@ class ProductController(
     fun getById(
         @PathVariable id: Long,
     ): ProductResponse = ProductResponse.from(productService.getById(id))
+
+    @GetMapping("/{id}/detail")
+    fun getDetailById(
+        @PathVariable id: Long,
+    ): ProductDetailResponse = productService.getDetailById(id)
 
     @GetMapping("/search")
     fun searchByName(
