@@ -23,14 +23,14 @@ import java.security.Principal
 @RequestMapping("/shopping-lists")
 class ShoppingListController(
     private val service: ShoppingListService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
     private fun user(principal: Principal): User = userRepository.findByEmail(principal.name).orElseThrow()
 
     @PostMapping
     fun save(
         @RequestBody request: SaveShoppingListRequest,
-        principal: Principal
+        principal: Principal,
     ): ShoppingListResponse {
         val user = user(principal)
         return service.save(request, user)
@@ -40,16 +40,14 @@ class ShoppingListController(
     fun update(
         @PathVariable id: Long,
         @RequestBody request: UpdateShoppingListRequest,
-        principal: Principal
+        principal: Principal,
     ): ShoppingListResponse {
         val user = user(principal)
         return service.update(id, request, user)
     }
 
     @GetMapping
-    fun getAll(
-        principal: Principal
-    ): List<ShoppingListSummaryResponse> {
+    fun getAll(principal: Principal): List<ShoppingListSummaryResponse> {
         val user = user(principal)
         return service.getAll(user)
     }
@@ -63,7 +61,7 @@ class ShoppingListController(
     @GetMapping("/{id}")
     fun getById(
         @PathVariable id: Long,
-        principal: Principal
+        principal: Principal,
     ): ShoppingListResponse {
         val user = user(principal)
         return service.getById(id, user)
@@ -72,7 +70,7 @@ class ShoppingListController(
     @DeleteMapping("/{id}")
     fun delete(
         @PathVariable id: Long,
-        principal: Principal
+        principal: Principal,
     ): DeleteShoppingListResponse {
         val user = user(principal)
         return service.delete(id, user)

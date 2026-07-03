@@ -9,5 +9,5 @@ data class ShoppingListSummaryResponse(
     val locationAddress: String,
     val completed: Boolean,
     val createdAt: LocalDateTime,
-    val itemCount: Int
+    val itemCount: Int,
 )

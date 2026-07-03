@@ -13,7 +13,6 @@ import java.math.BigDecimal
 @Entity
 @Table(name = "shopping_list")
 class ShoppingList : BaseEntity() {
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     lateinit var user: User

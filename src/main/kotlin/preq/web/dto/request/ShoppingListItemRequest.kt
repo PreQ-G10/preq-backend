@@ -5,5 +5,5 @@ import java.math.BigDecimal
 data class ShoppingListItemRequest(
     val productId: Long,
     val cartQuantity: Int,
-    val unitPrice: BigDecimal
+    val unitPrice: BigDecimal,
 )

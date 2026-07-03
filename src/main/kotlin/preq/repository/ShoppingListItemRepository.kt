@@ -6,5 +6,8 @@ import preq.model.ShoppingListItem
 
 @Repository
 interface ShoppingListItemRepository : JpaRepository<ShoppingListItem, Long> {
-    fun findByIdAndShoppingListId(id: Long, shoppingListId: Long): ShoppingListItem?
+    fun findByIdAndShoppingListId(
+        id: Long,
+        shoppingListId: Long,
+    ): ShoppingListItem?
 }

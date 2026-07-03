@@ -10,7 +10,7 @@ import jakarta.persistence.UniqueConstraint
 @Entity
 @Table(
     name = "product_image_dispute",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["image_id", "user_id"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["image_id", "user_id"])],
 )
 class ProductImageDispute : BaseEntity() {
     @ManyToOne(fetch = FetchType.LAZY)

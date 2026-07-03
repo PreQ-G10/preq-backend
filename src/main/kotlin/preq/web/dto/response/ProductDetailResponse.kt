@@ -14,17 +14,21 @@ data class ProductDetailResponse(
     val images: List<ProductImageResponse>,
 ) {
     companion object {
-        fun from(product: Product, images: List<ProductImage>, disputeCounts: Map<Long, Long>) =
-            ProductDetailResponse(
-                id = product.id,
-                name = product.name,
-                brand = product.brand,
-                quantity = product.quantity,
-                quantityType = product.quantityType,
-                barcode = product.barcode,
-                images = images.map { image ->
+        fun from(
+            product: Product,
+            images: List<ProductImage>,
+            disputeCounts: Map<Long, Long>,
+        ) = ProductDetailResponse(
+            id = product.id,
+            name = product.name,
+            brand = product.brand,
+            quantity = product.quantity,
+            quantityType = product.quantityType,
+            barcode = product.barcode,
+            images =
+                images.map { image ->
                     ProductImageResponse.from(image, disputeCounts.getOrDefault(image.id, 0L))
                 },
-            )
+        )
     }
 }

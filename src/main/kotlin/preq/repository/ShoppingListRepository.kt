@@ -11,37 +11,49 @@ import java.time.LocalDateTime
 
 @Repository
 interface ShoppingListRepository : JpaRepository<ShoppingList, Long> {
+    fun findByIdAndUserId(
+        id: Long,
+        userId: Long,
+    ): ShoppingList?
 
-    fun findByIdAndUserId(id: Long, userId: Long): ShoppingList?
-
-    @Query("""
+    @Query(
+        """
         SELECT
             sl.id, sl.location.id, sl.location.name, sl.location.address,
             sl.completed, sl.createdAt, SIZE(sl.items)
         FROM ShoppingList sl
         WHERE sl.user.id = :userId
         ORDER BY sl.createdAt DESC
-    """)
+    """,
+    )
     fun findSummariesByUserId(userId: Long): List<ShoppingListSummaryResponse>
 
-    @Query("""
+    @Query(
+        """
     SELECT COUNT(DISTINCT sl.user.id)
     FROM ShoppingList sl
     WHERE sl.location.id = :locationId
       AND sl.createdAt >= :since
-""")
-    fun countDistinctUsersSince(locationId: Long, since: LocalDateTime): Long
+""",
+    )
+    fun countDistinctUsersSince(
+        locationId: Long,
+        since: LocalDateTime,
+    ): Long
 
-    @Query("""
+    @Query(
+        """
     SELECT sl.totalPrice
     FROM ShoppingList sl
     WHERE sl.location.id = :locationId
     ORDER BY sl.createdAt DESC
     LIMIT 10
-""")
+""",
+    )
     fun findLast10TotalPrices(locationId: Long): List<BigDecimal>
 
-    @Query("""
+    @Query(
+        """
     SELECT
         sli.product.id,
         sli.product.name,
@@ -51,6 +63,7 @@ interface ShoppingListRepository : JpaRepository<ShoppingList, Long> {
     GROUP BY sli.product.id, sli.product.name
     ORDER BY SUM(sli.cartQuantity) DESC
     LIMIT 5
-""")
+""",
+    )
     fun findTop5Products(locationId: Long): List<TopProductResponse>
 }

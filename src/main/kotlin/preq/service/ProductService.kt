@@ -159,8 +159,10 @@ class ProductService(
     fun getById(id: Long): Product = productRepository.findById(id).orElseThrow { NoSuchElementException("Product not found") }
 
     fun getDetailById(id: Long): ProductDetailResponse {
-        val product = productRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Product not found") }
+        val product =
+            productRepository
+                .findById(id)
+                .orElseThrow { NoSuchElementException("Product not found") }
 
         val images = product.approvedImages()
         val disputeCounts = images.associate { image -> image.id to productImageDisputeRepository.countByImageId(image.id) }

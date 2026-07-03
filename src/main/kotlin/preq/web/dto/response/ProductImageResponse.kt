@@ -8,7 +8,10 @@ data class ProductImageResponse(
     val disputeCount: Long,
 ) {
     companion object {
-        fun from(image: ProductImage, disputeCount: Long) = ProductImageResponse(
+        fun from(
+            image: ProductImage,
+            disputeCount: Long,
+        ) = ProductImageResponse(
             id = image.id,
             imageUrl = image.imageUrl,
             disputeCount = disputeCount,

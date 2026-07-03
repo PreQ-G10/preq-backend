@@ -57,22 +57,70 @@ class DataInitializer(
 
     private val seedNames =
         listOf(
-            "Mateo", "Valentina", "Santiago", "Sofía", "Nicolás",
-            "Martina", "Tomás", "Lucía", "Benjamín", "Emma",
-            "Lucas", "Camila", "Facundo", "Florencia", "Ignacio",
-            "Agustina", "Joaquín", "Rocío", "Sebastián", "Pilar",
-            "Marcos", "Julieta", "Andrés", "Valeria", "Bruno",
-            "Milagros", "Ezequiel", "Natalia", "Ramiro", "Clara",
+            "Mateo",
+            "Valentina",
+            "Santiago",
+            "Sofía",
+            "Nicolás",
+            "Martina",
+            "Tomás",
+            "Lucía",
+            "Benjamín",
+            "Emma",
+            "Lucas",
+            "Camila",
+            "Facundo",
+            "Florencia",
+            "Ignacio",
+            "Agustina",
+            "Joaquín",
+            "Rocío",
+            "Sebastián",
+            "Pilar",
+            "Marcos",
+            "Julieta",
+            "Andrés",
+            "Valeria",
+            "Bruno",
+            "Milagros",
+            "Ezequiel",
+            "Natalia",
+            "Ramiro",
+            "Clara",
         )
 
     private val seedLastNames =
         listOf(
-            "García", "Martínez", "López", "González", "Rodríguez",
-            "Fernández", "Pérez", "Sánchez", "Romero", "Torres",
-            "Díaz", "Álvarez", "Ruiz", "Moreno", "Muñoz",
-            "Alonso", "Gutiérrez", "Navarro", "Molina", "Domínguez",
-            "Gil", "Vázquez", "Serrano", "Blanco", "Ramírez",
-            "Herrera", "Medina", "Suárez", "Castro", "Ortega",
+            "García",
+            "Martínez",
+            "López",
+            "González",
+            "Rodríguez",
+            "Fernández",
+            "Pérez",
+            "Sánchez",
+            "Romero",
+            "Torres",
+            "Díaz",
+            "Álvarez",
+            "Ruiz",
+            "Moreno",
+            "Muñoz",
+            "Alonso",
+            "Gutiérrez",
+            "Navarro",
+            "Molina",
+            "Domínguez",
+            "Gil",
+            "Vázquez",
+            "Serrano",
+            "Blanco",
+            "Ramírez",
+            "Herrera",
+            "Medina",
+            "Suárez",
+            "Castro",
+            "Ortega",
         )
 
     private val businessOwnerNames =
@@ -443,14 +491,15 @@ class DataInitializer(
 
         val regularUsers = users.filter { it.role == UserRole.USER }
 
-        val locationPriceMap = locationProductPriceRepository
-            .findAll()
-            .groupBy { it.location!!.id }
-            .mapValues { (_, prices) ->
-                prices
-                    .groupBy { it.product!!.id }
-                    .mapValues { (_, productPrices) -> productPrices.maxBy { it.reportedAt } }
-            }
+        val locationPriceMap =
+            locationProductPriceRepository
+                .findAll()
+                .groupBy { it.location!!.id }
+                .mapValues { (_, prices) ->
+                    prices
+                        .groupBy { it.product!!.id }
+                        .mapValues { (_, productPrices) -> productPrices.maxBy { it.reportedAt } }
+                }
 
         regularUsers.forEach { user ->
             val listCount = rng.nextInt(1, 6)
@@ -463,27 +512,29 @@ class DataInitializer(
                 val itemCount = rng.nextInt(2, minOf(8, productPriceMap.size) + 1)
                 val selectedPrices = productPriceMap.values.shuffled(rng).take(itemCount)
 
-                val list = ShoppingList().apply {
-                    this.user = user
-                    this.location = location
-                    this.completed = rng.nextDouble() < 0.3
-                    this.totalPrice = BigDecimal.ZERO
-                }
+                val list =
+                    ShoppingList().apply {
+                        this.user = user
+                        this.location = location
+                        this.completed = rng.nextDouble() < 0.3
+                        this.totalPrice = BigDecimal.ZERO
+                    }
 
                 var computedTotal = BigDecimal.ZERO
 
-                val items = selectedPrices.map { lpp ->
-                    val cartQuantity = rng.nextInt(1, 4)
-                    val itemTotal = lpp.price.multiply(cartQuantity.toBigDecimal())
-                    computedTotal += itemTotal
-                    ShoppingListItem().apply {
-                        this.shoppingList = list
-                        this.product = lpp.product!!
-                        this.cartQuantity = cartQuantity
-                        this.checkedQuantity = if (rng.nextBoolean()) rng.nextInt(0, cartQuantity + 1) else 0
-                        this.unitPrice = lpp.price
+                val items =
+                    selectedPrices.map { lpp ->
+                        val cartQuantity = rng.nextInt(1, 4)
+                        val itemTotal = lpp.price.multiply(cartQuantity.toBigDecimal())
+                        computedTotal += itemTotal
+                        ShoppingListItem().apply {
+                            this.shoppingList = list
+                            this.product = lpp.product!!
+                            this.cartQuantity = cartQuantity
+                            this.checkedQuantity = if (rng.nextBoolean()) rng.nextInt(0, cartQuantity + 1) else 0
+                            this.unitPrice = lpp.price
+                        }
                     }
-                }
 
                 list.totalPrice = computedTotal
                 val savedList = shoppingListRepository.save(list)

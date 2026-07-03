@@ -11,7 +11,6 @@ import java.math.BigDecimal
 @Entity
 @Table(name = "shopping_list_item")
 class ShoppingListItem : BaseEntity() {
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shopping_list_id", nullable = false)
     lateinit var shoppingList: ShoppingList
