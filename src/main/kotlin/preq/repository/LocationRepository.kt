@@ -64,4 +64,6 @@ interface LocationRepository : JpaRepository<Location, Long> {
     ): List<Location>
 
     fun findByClaimedBy(user: User): Location?
+
+    fun findByClaimedById(userId: Long): Location?
 }

@@ -24,6 +24,7 @@ import preq.model.ProductImage
 import preq.model.User
 import preq.repository.LocationProductPriceRepository
 import preq.repository.ProductFieldContestRepository
+import preq.repository.ProductImageDisputeRepository
 import preq.repository.ProductImageRepository
 import preq.repository.ProductRepository
 import preq.service.CloudinaryService
@@ -48,6 +49,7 @@ class ProductServiceTest {
     private val openFoodFactsService: OpenFoodFactsService = mock()
     private val userService: UserService = mock()
     private val contestRepository: ProductFieldContestRepository = mock()
+    private val productImageDisputeRepository: ProductImageDisputeRepository = mock()
     private val service =
         ProductService(
             productRepository,
@@ -58,10 +60,12 @@ class ProductServiceTest {
             openFoodFactsService,
             userService,
             contestRepository,
+            0.78,
             minimumTrustScore = 0.8,
             minimumFieldContestVotesRequired = 3.0,
             radiusMeters = 5000.0,
             discountThreshold = BigDecimal("0.05"),
+            productImageDisputeRepository = productImageDisputeRepository,
         )
 
     private val mockFile = MockMultipartFile("file", "img.jpg", "image/jpeg", byteArrayOf(1, 2, 3))
